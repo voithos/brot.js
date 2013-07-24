@@ -1,0 +1,7 @@
+# Default
+* text=auto
+
+# Always normalize
+*.js text
+*.md text
+*.html text
