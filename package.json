@@ -1,0 +1,29 @@
+{
+    "name": "brot.js",
+    "version": "0.0.1",
+    "author": "Zaven Muradyan <megalivoithos@gmail.com>",
+    "description": "A unique Mandelbrot set generator",
+    "contributors": [{
+        "name": "Zaven Muradyan",
+        "email": "megalivoithos@gmail.com"
+    }],
+    "main": "brot.js",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/voithos/brot.js.git"
+    },
+    "keywords": [
+        "mandelbrot",
+        "visualization",
+        "asm.js"
+    ],
+    "dependencies": {
+    },
+    "devDependencies": {
+        "mocha": "1.12.x",
+        "chai": "1.7.x"
+    },
+    "bundledDependencies": [
+    ],
+    "license": "MIT"
+}
