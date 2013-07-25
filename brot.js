@@ -1,4 +1,4 @@
-(function(global) {
+(function() {
     /**
      * Complex prototype for computation with complex numbers
      */
@@ -50,6 +50,17 @@
         );
     };
 
-    // Assign to global
-    global.Complex = Complex;
-})(this);
+    // Export library
+    // Supports Node.js module, AMD, and browser
+    if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
+        module.exports = Complex;
+    } else {
+        if (typeof define === 'function' && define.amd) {
+            define([], function() {
+                return Complex;
+            });
+        } else {
+            window.Complex = Complex;
+        }
+    }
+})();
