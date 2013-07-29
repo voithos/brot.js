@@ -43,7 +43,7 @@
 
     Complex.prototype.div = function(other) {
         other = Complex.toComplex(other);
-        var denom = this.imag * this.imag + other.imag * other.imag;
+        var denom = other.real * other.real + other.imag * other.imag;
         return new Complex(
             (this.real * other.real + this.imag * other.imag) / denom,
             (this.imag * other.real - this.real * other.imag) / denom
