@@ -21,7 +21,8 @@
     },
     "devDependencies": {
         "mocha": "1.12.x",
-        "chai": "1.7.x"
+        "chai": "1.7.x",
+        "browserify": "*"
     },
     "bundledDependencies": [
     ],
