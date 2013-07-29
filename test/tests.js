@@ -98,4 +98,12 @@ describe('Complex', function() {
         expect(conj.real).to.equal(2);
         expect(conj.imag).to.equal(-5);
     });
+
+    it('should support an in-place API', function() {
+        var c = Complex(2, 5),
+            c2 = c.iadd(Complex(3, 2));
+        expect(c.real).to.equal(5);
+        expect(c.imag).to.equal(7);
+        expect(c).to.equal(c2);
+    });
 });

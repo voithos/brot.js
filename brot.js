@@ -24,34 +24,61 @@
     };
 
     Complex.prototype.add = function(other) {
+        return this.clone().iadd(other);
+    };
+
+    Complex.prototype.iadd = function(other) {
         other = Complex.toComplex(other);
-        return new Complex(this.real + other.real, this.imag + other.imag);
+        this.real = this.real + other.real;
+        this.imag = this.imag + other.imag;
+        return this;
     };
 
     Complex.prototype.sub = function(other) {
+        return this.clone().isub(other);
+    };
+
+    Complex.prototype.isub = function(other) {
         other = Complex.toComplex(other);
-        return new Complex(this.real - other.real, this.imag - other.imag);
+        this.real = this.real - other.real;
+        this.imag = this.imag - other.imag;
+        return this;
     };
 
     Complex.prototype.mult = function(other) {
+        return this.clone().imult(other);
+    };
+
+    Complex.prototype.imult = function(other) {
         other = Complex.toComplex(other);
-        return new Complex(
-            this.real * other.real - this.imag * other.imag,
-            this.imag * other.real + this.real * other.imag
-        );
+        var real = this.real * other.real - this.imag * other.imag,
+            imag = this.imag * other.real + this.real * other.imag;
+        this.real = real;
+        this.imag = imag;
+        return this;
     };
 
     Complex.prototype.div = function(other) {
+        return this.clone().idiv(other);
+    };
+
+    Complex.prototype.idiv = function(other) {
         other = Complex.toComplex(other);
-        var denom = other.real * other.real + other.imag * other.imag;
-        return new Complex(
-            (this.real * other.real + this.imag * other.imag) / denom,
-            (this.imag * other.real - this.real * other.imag) / denom
-        );
+        var denom = other.real * other.real + other.imag * other.imag,
+            real = (this.real * other.real + this.imag * other.imag) / denom,
+            imag = (this.imag * other.real - this.real * other.imag) / denom;
+        this.real = real;
+        this.imag = imag;
+        return this;
     };
 
     Complex.prototype.conjugate = function() {
-        return new Complex(this.real, -this.imag);
+        return this.clone().iconjugate();
+    };
+
+    Complex.prototype.iconjugate = function() {
+        this.imag = -this.imag;
+        return this;
     };
 
     // Export library
