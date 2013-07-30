@@ -88,16 +88,5 @@
     };
 
     // Export library
-    // Supports Node.js module, AMD, and browser
-    if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
-        module.exports = Complex;
-    } else {
-        if (typeof define === 'function' && define.amd) {
-            define([], function() {
-                return Complex;
-            });
-        } else {
-            window.Complex = Complex;
-        }
-    }
+    module.exports = Complex;
 })();
