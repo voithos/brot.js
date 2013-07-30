@@ -87,6 +87,46 @@
         return Math.sqrt(this.real * this.real + this.imag * this.imag);
     };
 
+    Complex.prototype.pow = function(n) {
+        return this.clone().ipow(n);
+    };
+
+    Complex.prototype.ipow = function(n) {
+        var i, c;
+        n = Number(n) || 0;
+        if (n === 0) {
+            this.real = 1;
+            this.imag = 0;
+        } else if (n < 0) {
+            // Negative exponent
+            n = -n;
+            c = this.clone();
+            for (i = 1; i < n; i++) {
+                c.imult(this);
+            }
+            this.real = 1;
+            this.imag = 0;
+            this.idiv(c);
+        } else {
+            // Normal exponent
+            c = this.clone();
+            for (i = 1; i < n; i++) {
+                c.imult(this);
+            }
+            this.real = c.real;
+            this.imag = c.imag;
+        }
+        return this;
+    };
+
+    Complex.prototype.squared = function() {
+        return this.clone().ipow(2);
+    };
+
+    Complex.prototype.isquared = function() {
+        return this.ipow(2);
+    };
+
     // Export library
     module.exports = Complex;
 })();

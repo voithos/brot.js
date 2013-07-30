@@ -113,4 +113,29 @@ describe('Complex', function() {
         expect(c.abs()).to.equal(2);
         expect(c2.abs()).to.equal(5);
     });
+
+    it('should support power operations', function() {
+        var c = Complex(2, 5),
+            c0 = c.pow(0),
+            c1 = c.pow(1),
+            c3 = c.pow(3);
+            cminus = c.pow(-1);
+
+        expect(c0.real).to.equal(1);
+        expect(c0.imag).to.equal(0);
+        expect(c1.real).to.equal(2);
+        expect(c1.imag).to.equal(5);
+        expect(c3.real).to.equal(-142);
+        expect(c3.imag).to.equal(-65);
+        expect(cminus.real).to.be.closeTo(0.0689, 0.001);
+        expect(cminus.imag).to.be.closeTo(-0.1724, 0.001);
+    });
+
+    it('should support squaring', function() {
+        var c = Complex(2, 5),
+            csquared = c.squared();
+
+        expect(csquared.real).to.equal(-21);
+        expect(csquared.imag).to.equal(20);
+    });
 });
