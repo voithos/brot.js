@@ -1,16 +1,16 @@
 (function() {
     'use strict';
 
-    var Complex = require('complex');
+    var Complex = require('./complex');
 
-    var Buddhabrot = function(w, h, numIter, maxEscapeIter, anti) {
+    var Buddhabrot = function(w, h, iterations, maxEscapeIter, anti) {
         if (!(this instanceof Buddhabrot)) {
             return new Buddhabrot(w, h);
         }
 
         this.width = w;
         this.height = h;
-        this.numIter = numIter || 1000000;
+        this.iterations = iterations || 1000000;
         this.maxEscapeIter = maxEscapeIter || 20;
         this.anti = anti || false;
     };
@@ -123,7 +123,7 @@
     Buddhabrot.prototype._execute = function() {
         var cx, cy, i;
 
-        for (i = 0; i < this.numIter; i++) {
+        for (i = 0; i < this.iterations; i++) {
             cx = this.xstart + Math.random() * this.xlength;
             cy = this.ystart + Math.random() * this.ylength;
             this._traceTrajectory(cx, cy);
@@ -139,22 +139,22 @@
         // y is the real axis, x is the imaginary
         var z = Complex(0, 0),
             z0 = Complex(cy, cx),
-            iteration = 0;
+            i = 0;
 
         // Repeat until escape, or maximum iteration count is reached
-        while (this._isBounded(z) && iteration < this.maxEscapeIter) {
-            this._cache(z, iteration);
+        while (this._isBounded(z) && i < this.maxEscapeIter) {
+            this._cache(z, i);
 
             // Mandelbrot function
             z = z.isquared().iadd(z0);
 
-            iteration++;
+            i++;
         }
 
         // Check if the value meets the criteria
-        if (this._checkCriteria(iteration)) {
-            // Since iterations start at 0, the count is (iteration + 1)
-            this._saveTrajectory(iteration + 1);
+        if (this._checkCriteria(i)) {
+            // Since iterations start at 0, the count is (i + 1)
+            this._saveTrajectory(i + 1);
         }
     };
 
