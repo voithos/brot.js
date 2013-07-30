@@ -19,7 +19,9 @@
     "visualization",
     "asm.js"
   ],
-  "dependencies": {},
+  "dependencies": {
+    "commander": "~2.0.0"
+  },
   "devDependencies": {
     "grunt": "~0.4.1",
     "grunt-contrib-jshint": "~0.6.2",
