@@ -1,5 +1,5 @@
 var expect = require('chai').expect,
-    Complex = require('../complex');
+    Complex = require('../src/complex');
 
 describe('Complex', function() {
     it('should account for missing "new"', function() {

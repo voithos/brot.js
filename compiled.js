@@ -3,6 +3,8 @@ var Complex = require('./complex');
 
 },{"./complex":2}],2:[function(require,module,exports){
 (function() {
+    'use strict';
+
     /**
      * Complex prototype for computation with complex numbers
      */
