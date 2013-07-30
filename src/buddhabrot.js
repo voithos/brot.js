@@ -144,7 +144,10 @@
         // Repeat until escape, or maximum iteration count is reached
         while (this._isBounded(z) && iteration < this.maxEscapeIter) {
             this._cache(z, iteration);
-            z = z.imult(z).iadd(z0);
+
+            // Mandelbrot function
+            z = z.isquared().iadd(z0);
+
             iteration++;
         }
 
