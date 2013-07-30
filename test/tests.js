@@ -90,7 +90,7 @@ describe('Complex', function() {
         expect(div2.imag).to.equal(11/13);
     });
 
-    it('should allow retrieval of the conjugate', function() {
+    it('should support retrieval of the conjugate', function() {
         var c = Complex(2, 5),
             conj = c.conjugate();
 
@@ -105,5 +105,12 @@ describe('Complex', function() {
         expect(c.real).to.equal(5);
         expect(c.imag).to.equal(7);
         expect(c).to.equal(c2);
+    });
+
+    it('should support retrieval of the absolute value', function() {
+        var c = Complex(Math.sqrt(2), Math.sqrt(2)),
+            c2 = Complex(5, 0);
+        expect(c.abs()).to.equal(2);
+        expect(c2.abs()).to.equal(5);
     });
 });

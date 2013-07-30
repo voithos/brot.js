@@ -83,6 +83,10 @@
         return this;
     };
 
+    Complex.prototype.abs = function() {
+        return Math.sqrt(this.real * this.real + this.imag * this.imag);
+    };
+
     // Export library
     // Supports Node.js module, AMD, and browser
     if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
