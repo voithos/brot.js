@@ -22,8 +22,7 @@ module.exports = function(grunt) {
     },
     uglify: {
       options: {
-        banner: '/*! <%= pkg.name %> - v<%= pkg.version %> - ' +
-          '<%= grunt.template.today("yyyy-mm-dd") %> */\n'
+        banner: '/*! <%= pkg.name %> - v<%= pkg.version %> */\n'
       },
       nomin: {
         options: {
@@ -48,8 +47,10 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-browserify');
   grunt.loadNpmTasks('grunt-contrib-uglify');
 
-  grunt.registerTask('test', ['jshint', 'cafemocha']);
-  grunt.registerTask('build', ['browserify', 'uglify']);
+  grunt.registerTask('test', 'Lint and test source files',
+                     ['jshint', 'cafemocha']);
+  grunt.registerTask('build', 'Combine and compress source for the frontend',
+                     ['browserify', 'uglify']);
   grunt.registerTask('default', ['test']);
 
 };
