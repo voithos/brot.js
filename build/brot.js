@@ -1,4 +1,4 @@
-/*! brot.js - v0.0.1 - 2013-07-30 */
+/*! brot.js - v0.0.1 */
 (function(e, t, n) {
     function i(n, s) {
         if (!t[n]) {
@@ -23,11 +23,155 @@
     return i;
 })({
     1: [ function(require, module, exports) {
-        var Complex = require("./complex");
+        (function($) {
+            "use strict";
+            var Buddhabrot = require("./buddhabrot");
+            $(document).ready(function() {
+                var width = 500, height = 500;
+                var canvas = document.getElementById("main");
+                var ctx = canvas.getContext("2d");
+                var buddha = new Buddhabrot(width, height);
+                var image = buddha.run();
+                var imageData = ctx.createImageData(canvas.width, canvas.height);
+                var pixels = imageData.data;
+                var length = imageData.width * imageData.height;
+                for (var i = 0; i < length; i++) {
+                    var idx = i * 4;
+                    pixels[idx] = 255 * image[i];
+                    pixels[idx + 3] = 255;
+                }
+                ctx.putImageData(imageData, 0, 0);
+            });
+        })(jQuery);
     }, {
-        "./complex": 2
+        "./buddhabrot": 2
     } ],
     2: [ function(require, module, exports) {
+        (function() {
+            (function() {
+                "use strict";
+                var Complex = require("./complex");
+                var Buddhabrot = function(w, h, iterations, maxEscapeIter, anti) {
+                    if (!(this instanceof Buddhabrot)) {
+                        return new Buddhabrot(w, h);
+                    }
+                    this.width = w;
+                    this.height = h;
+                    this.iterations = iterations || 1e6;
+                    this.maxEscapeIter = maxEscapeIter || 20;
+                    this.anti = anti || false;
+                };
+                Buddhabrot.prototype.run = function() {
+                    this._setup();
+                    this._execute();
+                    return this.normedImage;
+                };
+                Buddhabrot.prototype._setup = function() {
+                    var INT_BYTES = 4, FLOAT_BYTES = 8;
+                    this.pixels = this.width * this.height;
+                    this.imageProcBytes = this.pixels * INT_BYTES + this.pixels * FLOAT_BYTES;
+                    this.bufLength = (this.pixels * INT_BYTES + this.pixels * FLOAT_BYTES) * 2;
+                    var remainder = this.bufLength - this.imageProcBytes;
+                    while (remainder < this.maxEscapeIter * FLOAT_BYTES * 2) {
+                        this.bufLength = this.bufLength * 2;
+                        remainder = this.bufLength - this.imageProcBytes;
+                    }
+                    this.buf = new ArrayBuffer(this.bufLength);
+                    this.imageStart = 0;
+                    this.imageLength = this.pixels;
+                    this.image = new Int32Array(this.buf, this.imageStart, this.imageLength);
+                    this.normedImageStart = this.imageLength * INT_BYTES;
+                    this.normedImageLength = this.pixels;
+                    this.normedImage = new Float64Array(this.buf, this.normedImageStart, this.normedImageLength);
+                    this.cacheStart = this.imageLength * INT_BYTES + this.normedImageLength * FLOAT_BYTES;
+                    this.cacheLength = (this.bufLength - this.cacheStart) / FLOAT_BYTES;
+                    this.cache = new Float64Array(this.buf, this.cacheStart, this.cacheLength);
+                    var MANDEL_REAL_LOWER = -2.5, MANDEL_REAL_UPPER = 1, MANDEL_IMAG_LOWER = -1, MANDEL_IMAG_UPPER = 1, MANDEL_REAL_LENGTH = MANDEL_REAL_UPPER - MANDEL_REAL_LOWER, MANDEL_IMAG_LENGTH = MANDEL_IMAG_UPPER - MANDEL_IMAG_LOWER, MANDEL_REAL_IMAG_RATIO = MANDEL_REAL_LENGTH / MANDEL_IMAG_LENGTH;
+                    var heightToWidthRatio = this.height / this.width;
+                    if (heightToWidthRatio <= MANDEL_REAL_IMAG_RATIO) {
+                        this.ystart = MANDEL_REAL_LOWER;
+                        this.ylength = MANDEL_REAL_LENGTH;
+                        this.xlength = this.ylength / heightToWidthRatio;
+                        this.xstart = 0 - this.xlength / 2;
+                    } else {
+                        this.xstart = MANDEL_IMAG_LOWER;
+                        this.xlength = MANDEL_IMAG_LENGTH;
+                        this.ylength = this.xlength * heightToWidthRatio;
+                        this.ystart = MANDEL_REAL_LOWER + MANDEL_REAL_LENGTH / 2 - this.ylength / 2;
+                    }
+                    this.xend = this.xstart + this.xlength;
+                    this.yend = this.ystart + this.ylength;
+                    this.dx = this.xlength / this.width;
+                    this.dy = this.ylength / this.height;
+                    this.normalizer = 0;
+                };
+                Buddhabrot.prototype._execute = function() {
+                    var cx, cy, i;
+                    for (i = 0; i < this.iterations; i++) {
+                        cx = this.xstart + Math.random() * this.xlength;
+                        cy = this.ystart + Math.random() * this.ylength;
+                        this._traceTrajectory(cx, cy);
+                    }
+                    this._normalizeImage();
+                };
+                Buddhabrot.prototype._traceTrajectory = function(cx, cy) {
+                    var z = Complex(0, 0), z0 = Complex(cy, cx), i = 0;
+                    while (this._isBounded(z) && i < this.maxEscapeIter) {
+                        this._cache(z, i);
+                        z = z.isquared().iadd(z0);
+                        i++;
+                    }
+                    if (this._checkCriteria(i)) {
+                        this._saveTrajectory(i + 1);
+                    }
+                };
+                Buddhabrot.prototype._normalizeImage = function() {
+                    var normalizer = this.normalizer || 1;
+                    for (var i = 0; i < this.pixels; i++) {
+                        this.normedImage[i] = this.image[i] / normalizer;
+                    }
+                };
+                Buddhabrot.prototype._isBounded = function(z) {
+                    var ESCAPE_LIMIT = 4;
+                    return z.real * z.real + z.imag * z.imag < ESCAPE_LIMIT;
+                };
+                Buddhabrot.prototype._cache = function(z, i) {
+                    var offset = 2 * i;
+                    this.cache[offset] = z.real;
+                    this.cache[offset + 1] = z.imag;
+                };
+                Buddhabrot.prototype._checkCriteria = function(iteration) {
+                    if (this.anti) {
+                        return iteration < this.maxEscapeIter;
+                    } else {
+                        return iteration === this.maxEscapeIter;
+                    }
+                };
+                Buddhabrot.prototype._saveTrajectory = function(iterationCount) {
+                    var i, offset, x, y, row, col, index, hits;
+                    for (i = 0; i < iterationCount; i++) {
+                        offset = 2 * i;
+                        y = this.cache[offset];
+                        x = this.cache[offset + 1];
+                        if (x < this.xstart || x > this.xend || y < this.ystart || y > this.yend) {
+                            continue;
+                        }
+                        row = (y - this.ystart) / this.dy | 0;
+                        col = (x - this.xstart) / this.dx | 0;
+                        index = row * this.width + col;
+                        hits = ++this.image[index];
+                        if (this.normalizer < hits) {
+                            this.normalizer = hits;
+                        }
+                    }
+                };
+                module.exports = Buddhabrot;
+            })();
+        })();
+    }, {
+        "./complex": 3
+    } ],
+    3: [ function(require, module, exports) {
         (function() {
             "use strict";
             var Complex = function(real, imag) {
