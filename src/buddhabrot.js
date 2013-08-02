@@ -10,7 +10,7 @@
 
         this.width = w;
         this.height = h;
-        this.iterations = iterations || 1000000;
+        this.iterations = iterations || 1e5;
         this.maxEscapeIter = maxEscapeIter || 20;
         this.anti = anti || false;
     };
@@ -137,8 +137,8 @@
      */
     Buddhabrot.prototype._traceTrajectory = function(cx, cy) {
         // y is the real axis, x is the imaginary
-        var z = Complex(0, 0),
-            z0 = Complex(cy, cx),
+        var z = Complex(cy, cx),
+            z0 = z.clone(),
             i = 0;
 
         // Repeat until escape, or maximum iteration count is reached
@@ -154,7 +154,7 @@
         // Check if the value meets the criteria
         if (this._checkCriteria(i)) {
             // Since iterations start at 0, the count is (i + 1)
-            this._saveTrajectory(i + 1);
+            this._saveTrajectory(i);
         }
     };
 
@@ -197,9 +197,9 @@
         // Standard Buddhabrot traces escaped points,
         // anti-Buddhabrot traces points that are in the set
         if (this.anti) {
-            return iteration < this.maxEscapeIter;
-        } else {
             return iteration === this.maxEscapeIter;
+        } else {
+            return iteration < this.maxEscapeIter;
         }
     };
 
