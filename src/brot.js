@@ -4,17 +4,16 @@
     var Buddhabrot = require('./buddhabrot');
 
     $(document).ready(function() {
-        var width = 500,
-            height = 500
-
         // Setup the canvas
         var canvas = document.getElementById('main');
+        canvas.width = (window.innerWidth * 0.8) | 0;
+        canvas.height = (window.innerHeight * 0.8) | 0;
+
+        var width = canvas.width,
+            height = canvas.height;
 
         // Extract 2d context
         var ctx = canvas.getContext('2d');
-
-        // Work with imagedata
-        // var imageData = ctx.createImageData(width, height);
 
         // Compute buddhabrot
         var buddha = new Buddhabrot(width, height);
@@ -27,6 +26,8 @@
         for (var i = 0; i < length; i++) {
             var idx = i * 4;
             pixels[idx] = 255 * image[i];
+            pixels[idx+1] = 255 * image[i];
+            pixels[idx+2] = 255 * image[i];
             pixels[idx+3] = 255;
         }
 
