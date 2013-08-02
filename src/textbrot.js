@@ -16,7 +16,7 @@ var drawbrot = function(w, h, image) {
         index,
         intensity;
 
-    var intensities = [0.0001, 0.001, 0.01, 0.03, 0.2];
+    var intensities = [0.05, 0.2, 0.4, 0.6, 0.8];
     var characters = ['  ', '░░', '▒▒', '▓▓', '██'];
 
     index = 0;
