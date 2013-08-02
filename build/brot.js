@@ -27,8 +27,10 @@
             "use strict";
             var Buddhabrot = require("./buddhabrot");
             $(document).ready(function() {
-                var width = 500, height = 500;
                 var canvas = document.getElementById("main");
+                canvas.width = window.innerWidth * .8 | 0;
+                canvas.height = window.innerHeight * .8 | 0;
+                var width = canvas.width, height = canvas.height;
                 var ctx = canvas.getContext("2d");
                 var buddha = new Buddhabrot(width, height);
                 var image = buddha.run();
@@ -38,6 +40,8 @@
                 for (var i = 0; i < length; i++) {
                     var idx = i * 4;
                     pixels[idx] = 255 * image[i];
+                    pixels[idx + 1] = 255 * image[i];
+                    pixels[idx + 2] = 255 * image[i];
                     pixels[idx + 3] = 255;
                 }
                 ctx.putImageData(imageData, 0, 0);
@@ -57,7 +61,7 @@
                     }
                     this.width = w;
                     this.height = h;
-                    this.iterations = iterations || 1e6;
+                    this.iterations = iterations || 1e5;
                     this.maxEscapeIter = maxEscapeIter || 20;
                     this.anti = anti || false;
                 };
@@ -115,14 +119,14 @@
                     this._normalizeImage();
                 };
                 Buddhabrot.prototype._traceTrajectory = function(cx, cy) {
-                    var z = Complex(0, 0), z0 = Complex(cy, cx), i = 0;
+                    var z = Complex(cy, cx), z0 = z.clone(), i = 0;
                     while (this._isBounded(z) && i < this.maxEscapeIter) {
                         this._cache(z, i);
                         z = z.isquared().iadd(z0);
                         i++;
                     }
                     if (this._checkCriteria(i)) {
-                        this._saveTrajectory(i + 1);
+                        this._saveTrajectory(i);
                     }
                 };
                 Buddhabrot.prototype._normalizeImage = function() {
@@ -142,9 +146,9 @@
                 };
                 Buddhabrot.prototype._checkCriteria = function(iteration) {
                     if (this.anti) {
-                        return iteration < this.maxEscapeIter;
-                    } else {
                         return iteration === this.maxEscapeIter;
+                    } else {
+                        return iteration < this.maxEscapeIter;
                     }
                 };
                 Buddhabrot.prototype._saveTrajectory = function(iterationCount) {
