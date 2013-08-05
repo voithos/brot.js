@@ -31,6 +31,23 @@ module.exports = function(grunt) {
             }
         }
     },
+    connect: {
+      options: {
+        port: 8080,
+        hostname: 'localhost',
+        base: '.'
+      },
+      dev: {
+        options: {
+          middleware: function(connect, options) {
+            return [
+              require('connect-livereload')(),
+              connect.static(options.base)
+            ];
+          }
+        }
+      }
+    },
     uglify: {
       options: {
         banner: '/*! <%= pkg.name %> - v<%= pkg.version %> */\n'
@@ -57,10 +74,11 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-cafe-mocha');
   grunt.loadNpmTasks('grunt-browserify');
   grunt.loadNpmTasks('grunt-contrib-watch');
+  grunt.loadNpmTasks('grunt-contrib-connect');
   grunt.loadNpmTasks('grunt-contrib-uglify');
 
   grunt.registerTask('develop', 'Setup development server and watch files',
-                     ['build', 'watch']);
+                     ['build', 'connect', 'watch']);
   grunt.registerTask('test', 'Lint and test source files',
                      ['jshint', 'cafemocha']);
   grunt.registerTask('build', 'Combine and compress source for the frontend',
