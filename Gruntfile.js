@@ -48,6 +48,11 @@ module.exports = function(grunt) {
         }
       }
     },
+    open: {
+      dev: {
+        path: 'http://localhost:8008'
+      }
+    },
     uglify: {
       options: {
         banner: '/*! <%= pkg.name %> - v<%= pkg.version %> */\n'
@@ -73,12 +78,13 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-cafe-mocha');
   grunt.loadNpmTasks('grunt-browserify');
+  grunt.loadNpmTasks('grunt-open');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-connect');
   grunt.loadNpmTasks('grunt-contrib-uglify');
 
   grunt.registerTask('develop', 'Setup development server and watch files',
-                     ['build', 'connect', 'watch']);
+                     ['build', 'connect', 'open', 'watch']);
   grunt.registerTask('test', 'Lint and test source files',
                      ['jshint', 'cafemocha']);
   grunt.registerTask('build', 'Combine and compress source for the frontend',
