@@ -23,17 +23,17 @@ module.exports = function(grunt) {
       'build/brot.js': 'src/brot.js'
     },
     watch: {
-        all: {
-            files: ['src/**/*.js', '!src/textbrot.js'],
-            tasks: ['build'],
-            options: {
-                livereload: true
-            }
+      dev: {
+        files: ['src/**/*.js', '!src/textbrot.js'],
+        tasks: ['build'],
+        options: {
+          livereload: true
         }
+      }
     },
     connect: {
       options: {
-        port: 8080,
+        port: 8008,
         hostname: 'localhost',
         base: '.'
       },
