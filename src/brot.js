@@ -16,7 +16,10 @@
         var ctx = canvas.getContext('2d');
 
         // Compute buddhabrot
-        var buddha = new Buddhabrot(width, height);
+        var buddha = new Buddhabrot({
+            width: width,
+            height: height
+        });
         var image = buddha.run();
 
         var imageData = ctx.createImageData(canvas.width, canvas.height);
