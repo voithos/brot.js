@@ -108,7 +108,7 @@
     grunt.registerTask('test', 'Lint and test source files',
                        ['jshint', 'cafemocha']);
     grunt.registerTask('watchtest', 'Watch for changes and lint and test source files',
-                       ['watch:test']);
+                       ['usetheforce_on', 'test', 'watch:test', 'usetheforce_off']);
     grunt.registerTask('build', 'Combine and compress source for the frontend',
                        ['browserify', 'uglify']);
 
