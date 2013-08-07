@@ -93,9 +93,6 @@
         this.dx = this.xlength / this.width;
         this.dy = this.ylength / this.height;
 
-        // Keep track of max hit count
-        this.normalizer = 0;
-
         this.initialized = true;
     };
 

@@ -7,6 +7,9 @@
         }
 
         this.config = config;
+
+        // Keep track of max hit count
+        this.normalizer = 0;
     };
 
     /**
