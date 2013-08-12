@@ -11,8 +11,8 @@
 
         for (i = 0; i < vendors.length && !window.requestAnimationFrame; i++) {
             window.requestAnimationFrame = window[vendors[i] + 'RequestAnimationFrame'];
-            window.cancelAnimationFrame = window[vendors[i] + 'CancelAnimationFrame']
-                                       || window[vendors[i] + 'CancelRequestAnimationFrame'];
+            window.cancelAnimationFrame = window[vendors[i] + 'CancelAnimationFrame'] ||
+                                          window[vendors[i] + 'CancelRequestAnimationFrame'];
         }
 
         if (!window.requestAnimationFrame) {
