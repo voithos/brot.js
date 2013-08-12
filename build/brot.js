@@ -25,6 +25,29 @@
     1: [ function(require, module, exports) {
         (function($) {
             "use strict";
+            (function() {
+                var lastTime = 0, vendors = [ "ms", "moz", "webkit", "o" ], i;
+                for (i = 0; i < vendors.length && !window.requestAnimationFrame; i++) {
+                    window.requestAnimationFrame = window[vendors[i] + "RequestAnimationFrame"];
+                    window.cancelAnimationFrame = window[vendors[i] + "CancelAnimationFrame"] || window[vendors[i] + "CancelRequestAnimationFrame"];
+                }
+                if (!window.requestAnimationFrame) {
+                    window.requestAnimationFrame = function(callback, element) {
+                        var currTime = new Date().getTime();
+                        var timeToCall = Math.max(0, 16 - (currTime - lastTime));
+                        var id = setTimeout(function() {
+                            callback(currTime + timeToCall);
+                        }, timeToCall);
+                        lastTime = currTime + timeToCall;
+                        return id;
+                    };
+                }
+                if (!window.cancelAnimationFrame) {
+                    window.cancelAnimationFrame = function(id) {
+                        clearTimeout(id);
+                    };
+                }
+            })();
             var Buddhabrot = require("./buddhabrot");
             $(document).ready(function() {
                 var canvas = document.getElementById("main");
@@ -32,19 +55,33 @@
                 canvas.height = window.innerHeight * .8 | 0;
                 var width = canvas.width, height = canvas.height;
                 var ctx = canvas.getContext("2d");
-                var buddha = new Buddhabrot(width, height);
-                var image = buddha.run();
-                var imageData = ctx.createImageData(canvas.width, canvas.height);
-                var pixels = imageData.data;
-                var length = imageData.width * imageData.height;
-                for (var i = 0; i < length; i++) {
-                    var idx = i * 4;
-                    pixels[idx] = 255 * image[i];
-                    pixels[idx + 1] = 255 * image[i];
-                    pixels[idx + 2] = 255 * image[i];
-                    pixels[idx + 3] = 255;
-                }
-                ctx.putImageData(imageData, 0, 0);
+                var buddha = new Buddhabrot({
+                    width: width,
+                    height: height,
+                    batched: true
+                });
+                var redraw = function() {
+                    if (!buddha.complete) {
+                        requestAnimationFrame(redraw);
+                    } else {
+                        console.log("complete");
+                    }
+                    var image = buddha.getImage();
+                    if (image) {
+                        var imageData = ctx.createImageData(canvas.width, canvas.height);
+                        var pixels = imageData.data;
+                        var length = imageData.width * imageData.height;
+                        for (var i = 0; i < length; i++) {
+                            var idx = i * 4;
+                            pixels[idx + 1] = 255 * image[i];
+                            pixels[idx + 2] = 255 * image[i];
+                            pixels[idx + 3] = 255;
+                        }
+                        ctx.putImageData(imageData, 0, 0);
+                    }
+                };
+                buddha.run(redraw);
+                requestAnimationFrame(redraw);
             });
         })(jQuery);
     }, {
@@ -52,130 +89,215 @@
     } ],
     2: [ function(require, module, exports) {
         (function() {
+            "use strict";
+            (function() {
+                if (!("bind" in Function.prototype)) {
+                    Function.prototype.bind = function(to) {
+                        var splice = Array.prototype.splice, partialArgs = splice.call(arguments, 1), fn = this;
+                        var bound = function() {
+                            var args = partialArgs.concat(splice.call(arguments, 0));
+                            if (!(this instanceof bound)) {
+                                return fn.apply(to, args);
+                            }
+                            fn.apply(this, args);
+                        };
+                        bound.prototype = fn.prototype;
+                        return bound;
+                    };
+                }
+            })();
+            var BuddhaConfig = require("./buddhaconfig");
+            var BuddhaData = require("./buddhadata");
+            var Complex = require("./complex");
+            var Buddhabrot = function(options) {
+                if (!(this instanceof Buddhabrot)) {
+                    return new Buddhabrot(options);
+                }
+                this.config = new BuddhaConfig(options);
+                this.config.computeConfig();
+                this.data = new BuddhaData(this.config);
+                this.callback = options.callback || function() {};
+                this.i = 0;
+                this.allocated = false;
+                this.complete = false;
+            };
+            Buddhabrot.prototype.run = function(callback) {
+                this.callback = callback || this.callback;
+                this.data.allocate();
+                this.allocated = true;
+                if (this.config.batched) {
+                    setTimeout(this._scheduleBatch.bind(this));
+                } else {
+                    this._computeTrajectories();
+                    this.callback(this.getImage());
+                }
+            };
+            Buddhabrot.prototype.getImage = function() {
+                if (!this.allocated) {
+                    return undefined;
+                }
+                return this.data.normedImage;
+            };
+            Buddhabrot.prototype._scheduleBatch = function() {
+                this._computeTrajectories();
+                if (!this.complete) {
+                    setTimeout(this._scheduleBatch.bind(this));
+                } else {
+                    this.callback(this.getImage());
+                }
+            };
+            Buddhabrot.prototype._computeTrajectories = function() {
+                var i = this.i, l = this.config.iterations, batchend = i + this.config.batchSize, end = batchend < l ? batchend : l, xstart = this.config.xstart, xlength = this.config.xlength, ystart = this.config.ystart, ylength = this.config.ylength, cx, cy;
+                for (;i < end; i++) {
+                    cx = xstart + Math.random() * xlength;
+                    cy = ystart + Math.random() * ylength;
+                    this._traceTrajectory(cx, cy);
+                }
+                this.i = i;
+                this.data.normalizeImage();
+                if (this.i === l) {
+                    this.complete = true;
+                }
+            };
+            Buddhabrot.prototype._traceTrajectory = function(cx, cy) {
+                var z = Complex(cy, cx), z0 = z.clone(), i = 0, maxEscapeIter = this.config.maxEscapeIter, data = this.data;
+                while (this._isBounded(z) && i < maxEscapeIter) {
+                    data.cacheTrajectory(z, i);
+                    z = z.isquared().iadd(z0);
+                    i++;
+                }
+                if (this._checkCriteria(i)) {
+                    data.saveTrajectory(i);
+                }
+            };
+            Buddhabrot.prototype._isBounded = function(z) {
+                var ESCAPE_LIMIT = 4;
+                return z.real * z.real + z.imag * z.imag < ESCAPE_LIMIT;
+            };
+            Buddhabrot.prototype._checkCriteria = function(iteration) {
+                if (this.config.anti) {
+                    return iteration === this.config.maxEscapeIter;
+                } else {
+                    return iteration < this.config.maxEscapeIter;
+                }
+            };
+            module.exports = Buddhabrot;
+        })();
+    }, {
+        "./buddhaconfig": 3,
+        "./buddhadata": 4,
+        "./complex": 5
+    } ],
+    3: [ function(require, module, exports) {
+        (function() {
+            "use strict";
+            var BuddhaConfig = function(options) {
+                if (!(this instanceof BuddhaConfig)) {
+                    return new BuddhaConfig(options);
+                }
+                this.width = options.width || options.w;
+                this.height = options.height || options.h;
+                this.iterations = options.iterations || 1e9;
+                this.maxEscapeIter = options.maxEscapeIter || options.max || 20;
+                this.batched = options.batch === false ? false : true;
+                this.batchSize = (options.batchSize < 0 ? null : options.batchSize) || 5e4;
+                this.anti = options.anti || false;
+                if (!this.batched) {
+                    this.batchSize = this.iterations;
+                }
+            };
+            BuddhaConfig.prototype.computeConfig = function() {
+                var INT_BYTES = 4, FLOAT_BYTES = 8;
+                this.pixels = this.width * this.height;
+                this.imageProcBytes = this.pixels * INT_BYTES + this.pixels * FLOAT_BYTES;
+                this.bufLength = (this.pixels * INT_BYTES + this.pixels * FLOAT_BYTES) * 2;
+                var remainder = this.bufLength - this.imageProcBytes;
+                while (remainder < this.maxEscapeIter * FLOAT_BYTES * 2) {
+                    this.bufLength = this.bufLength * 2;
+                    remainder = this.bufLength - this.imageProcBytes;
+                }
+                this.imageStart = 0;
+                this.imageLength = this.pixels;
+                this.normedImageStart = this.imageLength * INT_BYTES;
+                this.normedImageLength = this.pixels;
+                this.cacheStart = this.imageLength * INT_BYTES + this.normedImageLength * FLOAT_BYTES;
+                this.cacheLength = (this.bufLength - this.cacheStart) / FLOAT_BYTES;
+                var MANDEL_REAL_LOWER = -2.5, MANDEL_REAL_UPPER = 1, MANDEL_IMAG_LOWER = -1, MANDEL_IMAG_UPPER = 1, MANDEL_REAL_LENGTH = MANDEL_REAL_UPPER - MANDEL_REAL_LOWER, MANDEL_IMAG_LENGTH = MANDEL_IMAG_UPPER - MANDEL_IMAG_LOWER, MANDEL_REAL_IMAG_RATIO = MANDEL_REAL_LENGTH / MANDEL_IMAG_LENGTH;
+                var heightToWidthRatio = this.height / this.width;
+                if (heightToWidthRatio <= MANDEL_REAL_IMAG_RATIO) {
+                    this.ystart = MANDEL_REAL_LOWER;
+                    this.ylength = MANDEL_REAL_LENGTH;
+                    this.xlength = this.ylength / heightToWidthRatio;
+                    this.xstart = 0 - this.xlength / 2;
+                } else {
+                    this.xstart = MANDEL_IMAG_LOWER;
+                    this.xlength = MANDEL_IMAG_LENGTH;
+                    this.ylength = this.xlength * heightToWidthRatio;
+                    this.ystart = MANDEL_REAL_LOWER + MANDEL_REAL_LENGTH / 2 - this.ylength / 2;
+                }
+                this.xend = this.xstart + this.xlength;
+                this.yend = this.ystart + this.ylength;
+                this.dx = this.xlength / this.width;
+                this.dy = this.ylength / this.height;
+                this.initialized = true;
+            };
+            module.exports = BuddhaConfig;
+        })();
+    }, {} ],
+    4: [ function(require, module, exports) {
+        (function() {
             (function() {
                 "use strict";
-                var Complex = require("./complex");
-                var Buddhabrot = function(w, h, iterations, maxEscapeIter, anti) {
-                    if (!(this instanceof Buddhabrot)) {
-                        return new Buddhabrot(w, h);
+                var BuddhaData = function(config) {
+                    if (!(this instanceof BuddhaData)) {
+                        return new BuddhaData(config);
                     }
-                    this.width = w;
-                    this.height = h;
-                    this.iterations = iterations || 1e5;
-                    this.maxEscapeIter = maxEscapeIter || 20;
-                    this.anti = anti || false;
-                };
-                Buddhabrot.prototype.run = function() {
-                    this._setup();
-                    this._execute();
-                    return this.normedImage;
-                };
-                Buddhabrot.prototype._setup = function() {
-                    var INT_BYTES = 4, FLOAT_BYTES = 8;
-                    this.pixels = this.width * this.height;
-                    this.imageProcBytes = this.pixels * INT_BYTES + this.pixels * FLOAT_BYTES;
-                    this.bufLength = (this.pixels * INT_BYTES + this.pixels * FLOAT_BYTES) * 2;
-                    var remainder = this.bufLength - this.imageProcBytes;
-                    while (remainder < this.maxEscapeIter * FLOAT_BYTES * 2) {
-                        this.bufLength = this.bufLength * 2;
-                        remainder = this.bufLength - this.imageProcBytes;
-                    }
-                    this.buf = new ArrayBuffer(this.bufLength);
-                    this.imageStart = 0;
-                    this.imageLength = this.pixels;
-                    this.image = new Int32Array(this.buf, this.imageStart, this.imageLength);
-                    this.normedImageStart = this.imageLength * INT_BYTES;
-                    this.normedImageLength = this.pixels;
-                    this.normedImage = new Float64Array(this.buf, this.normedImageStart, this.normedImageLength);
-                    this.cacheStart = this.imageLength * INT_BYTES + this.normedImageLength * FLOAT_BYTES;
-                    this.cacheLength = (this.bufLength - this.cacheStart) / FLOAT_BYTES;
-                    this.cache = new Float64Array(this.buf, this.cacheStart, this.cacheLength);
-                    var MANDEL_REAL_LOWER = -2.5, MANDEL_REAL_UPPER = 1, MANDEL_IMAG_LOWER = -1, MANDEL_IMAG_UPPER = 1, MANDEL_REAL_LENGTH = MANDEL_REAL_UPPER - MANDEL_REAL_LOWER, MANDEL_IMAG_LENGTH = MANDEL_IMAG_UPPER - MANDEL_IMAG_LOWER, MANDEL_REAL_IMAG_RATIO = MANDEL_REAL_LENGTH / MANDEL_IMAG_LENGTH;
-                    var heightToWidthRatio = this.height / this.width;
-                    if (heightToWidthRatio <= MANDEL_REAL_IMAG_RATIO) {
-                        this.ystart = MANDEL_REAL_LOWER;
-                        this.ylength = MANDEL_REAL_LENGTH;
-                        this.xlength = this.ylength / heightToWidthRatio;
-                        this.xstart = 0 - this.xlength / 2;
-                    } else {
-                        this.xstart = MANDEL_IMAG_LOWER;
-                        this.xlength = MANDEL_IMAG_LENGTH;
-                        this.ylength = this.xlength * heightToWidthRatio;
-                        this.ystart = MANDEL_REAL_LOWER + MANDEL_REAL_LENGTH / 2 - this.ylength / 2;
-                    }
-                    this.xend = this.xstart + this.xlength;
-                    this.yend = this.ystart + this.ylength;
-                    this.dx = this.xlength / this.width;
-                    this.dy = this.ylength / this.height;
+                    this.config = config;
                     this.normalizer = 0;
                 };
-                Buddhabrot.prototype._execute = function() {
-                    var cx, cy, i;
-                    for (i = 0; i < this.iterations; i++) {
-                        cx = this.xstart + Math.random() * this.xlength;
-                        cy = this.ystart + Math.random() * this.ylength;
-                        this._traceTrajectory(cx, cy);
+                BuddhaData.prototype.allocate = function() {
+                    if (!this.config.initialized) {
+                        throw "BuddhaConfig has not been initialized";
                     }
-                    this._normalizeImage();
+                    this.buf = new ArrayBuffer(this.config.bufLength);
+                    this.image = new Int32Array(this.buf, this.config.imageStart, this.config.imageLength);
+                    this.normedImage = new Float64Array(this.buf, this.config.normedImageStart, this.config.normedImageLength);
+                    this.cache = new Float64Array(this.buf, this.config.cacheStart, this.config.cacheLength);
                 };
-                Buddhabrot.prototype._traceTrajectory = function(cx, cy) {
-                    var z = Complex(cy, cx), z0 = z.clone(), i = 0;
-                    while (this._isBounded(z) && i < this.maxEscapeIter) {
-                        this._cache(z, i);
-                        z = z.isquared().iadd(z0);
-                        i++;
-                    }
-                    if (this._checkCriteria(i)) {
-                        this._saveTrajectory(i);
-                    }
-                };
-                Buddhabrot.prototype._normalizeImage = function() {
+                BuddhaData.prototype.normalizeImage = function() {
                     var normalizer = this.normalizer || 1;
-                    for (var i = 0; i < this.pixels; i++) {
+                    for (var i = 0; i < this.config.pixels; i++) {
                         this.normedImage[i] = this.image[i] / normalizer;
                     }
                 };
-                Buddhabrot.prototype._isBounded = function(z) {
-                    var ESCAPE_LIMIT = 4;
-                    return z.real * z.real + z.imag * z.imag < ESCAPE_LIMIT;
-                };
-                Buddhabrot.prototype._cache = function(z, i) {
+                BuddhaData.prototype.cacheTrajectory = function(z, i) {
                     var offset = 2 * i;
                     this.cache[offset] = z.real;
                     this.cache[offset + 1] = z.imag;
                 };
-                Buddhabrot.prototype._checkCriteria = function(iteration) {
-                    if (this.anti) {
-                        return iteration === this.maxEscapeIter;
-                    } else {
-                        return iteration < this.maxEscapeIter;
-                    }
-                };
-                Buddhabrot.prototype._saveTrajectory = function(iterationCount) {
-                    var i, offset, x, y, row, col, index, hits;
+                BuddhaData.prototype.saveTrajectory = function(iterationCount) {
+                    var xstart = this.config.xstart, xend = this.config.xend, ystart = this.config.ystart, yend = this.config.yend, dx = this.config.dx, dy = this.config.dy, width = this.config.width, i, offset, x, y, row, col, index, hits;
                     for (i = 0; i < iterationCount; i++) {
                         offset = 2 * i;
                         y = this.cache[offset];
                         x = this.cache[offset + 1];
-                        if (x < this.xstart || x > this.xend || y < this.ystart || y > this.yend) {
+                        if (x < xstart || x > xend || y < ystart || y > yend) {
                             continue;
                         }
-                        row = (y - this.ystart) / this.dy | 0;
-                        col = (x - this.xstart) / this.dx | 0;
-                        index = row * this.width + col;
+                        row = (y - ystart) / dy | 0;
+                        col = (x - xstart) / dx | 0;
+                        index = row * width + col;
                         hits = ++this.image[index];
                         if (this.normalizer < hits) {
                             this.normalizer = hits;
                         }
                     }
                 };
-                module.exports = Buddhabrot;
+                module.exports = BuddhaData;
             })();
         })();
-    }, {
-        "./complex": 3
-    } ],
-    3: [ function(require, module, exports) {
+    }, {} ],
+    5: [ function(require, module, exports) {
         (function() {
             "use strict";
             var Complex = function(real, imag) {
