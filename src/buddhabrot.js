@@ -1,6 +1,30 @@
 (function() {
     'use strict';
 
+    /**
+     * Function.bind polyfill
+     */
+    (function() {
+        if (!('bind' in Function.prototype)) {
+            Function.prototype.bind = function(to) {
+                var splice = Array.prototype.splice,
+                    partialArgs = splice.call(arguments, 1),
+                    fn = this;
+
+                var bound = function() {
+                    var args = partialArgs.concat(splice.call(arguments, 0));
+                    if (!(this instanceof bound)) {
+                        return fn.apply(to, args);
+                    }
+                    fn.apply(this, args);
+                };
+
+                bound.prototype = fn.prototype;
+                return bound;
+            };
+        }
+    })();
+
     var BuddhaConfig = require('./buddhaconfig');
     var BuddhaData = require('./buddhadata');
     var Complex = require('./complex');
@@ -13,15 +37,53 @@
         this.config = new BuddhaConfig(options);
         this.config.computeConfig();
         this.data = new BuddhaData(this.config);
+
+        this.callback = options.callback || function() {};
+        this.i = 0;
+
+        // Flags
+        this.allocated = false;
+        this.complete = false;
     };
 
     /**
-     * Run the fractal sampler and return the generated image data
+     * Run the fractal sampler
      */
-    Buddhabrot.prototype.run = function() {
+    Buddhabrot.prototype.run = function(callback) {
+        this.callback = callback || this.callback;
         this.data.allocate();
-        this._computeTrajectories();
+        this.allocated = true;
+
+        if (this.config.batched) {
+            setTimeout(this._scheduleBatch.bind(this));
+        } else {
+            this._computeTrajectories();
+            this.callback(this.getImage());
+        }
+    };
+
+    /**
+     * Return the current view of the image
+     */
+    Buddhabrot.prototype.getImage = function() {
+        if (!this.allocated) {
+            return undefined;
+        }
         return this.data.normedImage;
+    };
+
+    /**
+     * Schedule a batch run of computations (batches are required
+     * because redraws require a context switch)
+     */
+    Buddhabrot.prototype._scheduleBatch = function() {
+        this._computeTrajectories();
+
+        if (!this.complete) {
+            setTimeout(this._scheduleBatch.bind(this));
+        } else {
+            this.callback(this.getImage());
+        }
     };
 
     /**
@@ -29,20 +91,28 @@
      * within the bounded range, then normalize them
      */
     Buddhabrot.prototype._computeTrajectories = function() {
-        var l = this.config.iterations,
+        var i = this.i,
+            l = this.config.iterations,
+            batchend = i + this.config.batchSize,
+            end = batchend < l ? batchend : l,
             xstart = this.config.xstart,
             xlength = this.config.xlength,
             ystart = this.config.ystart,
             ylength = this.config.ylength,
-            cx, cy, i;
+            cx, cy;
 
-        for (i = 0; i < l; i++) {
+        for (; i < end; i++) {
             cx = xstart + Math.random() * xlength;
             cy = ystart + Math.random() * ylength;
             this._traceTrajectory(cx, cy);
         }
 
+        this.i = i;
         this.data.normalizeImage();
+
+        if (this.i === l) {
+            this.complete = true;
+        }
     };
 
     /**

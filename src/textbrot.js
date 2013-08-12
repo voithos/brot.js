@@ -3,9 +3,17 @@
 var Buddhabrot = require('./buddhabrot');
 
 var textbrot = function(w, h, iterations, max, anti) {
-    var buddha = new Buddhabrot(w, h, iterations, max, anti);
-    var image = buddha.run();
-    drawbrot(w, h, image);
+    var buddha = new Buddhabrot({
+        width: w,
+        height: h,
+        iterations: iterations,
+        max: max,
+        anti: anti,
+        batched: false
+    });
+    buddha.run(function(image) {
+        drawbrot(w, h, image);
+    });
 };
 
 var drawbrot = function(w, h, image) {

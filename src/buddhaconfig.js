@@ -8,9 +8,15 @@
 
         this.width = options.width || options.w;
         this.height = options.height || options.h;
-        this.iterations = options.iterations || 1e5;
+        this.iterations = options.iterations || 1e9;
         this.maxEscapeIter = options.maxEscapeIter || options.max || 20;
+        this.batched = options.batch === false ? false : true;
+        this.batchSize = (options.batchSize < 0 ? null : options.batchSize) || 5e4;
         this.anti = options.anti || false;
+
+        if (!this.batched) {
+            this.batchSize = this.iterations;
+        }
     };
 
     /**
