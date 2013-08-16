@@ -143,12 +143,12 @@
     };
 
     /**
-     * Return a value indicating whether the unnormalized (non-sqrt) absolute
-     * value of the given complex number is below the escape limit
+     * Return a value indicating whether the complex number is bounded
+     * within the viewable area
      */
     Buddhabrot.prototype._isBounded = function(z) {
-        var ESCAPE_LIMIT = 4;
-        return (z.real * z.real + z.imag * z.imag) < ESCAPE_LIMIT;
+        return !(z.real < this.config.ystart || z.real > this.config.yend ||
+                 z.imag < this.config.xstart || z.imag > this.config.xend);
     };
 
     /**
