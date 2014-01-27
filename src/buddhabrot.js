@@ -19,6 +19,9 @@
         // Flags
         this.allocated = false;
         this.complete = false;
+
+        // Cached objects, to avoid garbage collector hits
+        this._scheduleBatchBound = this._scheduleBatch.bind(this);
     };
 
     /**
@@ -30,7 +33,7 @@
         this.allocated = true;
 
         if (this.config.batched) {
-            setTimeout(this._scheduleBatch.bind(this));
+            setTimeout(this._scheduleBatchBound);
         } else {
             this._computeTrajectories();
             this.callback(this.getImage());
@@ -55,7 +58,7 @@
         this._computeTrajectories();
 
         if (!this.complete) {
-            setTimeout(this._scheduleBatch.bind(this));
+            setTimeout(this._scheduleBatchBound);
         } else {
             this.callback(this.getImage());
         }

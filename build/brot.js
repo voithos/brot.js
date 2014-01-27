@@ -33,6 +33,7 @@
                 canvas.height = window.innerHeight;
                 var width = canvas.width, height = canvas.height;
                 var ctx = canvas.getContext("2d");
+                var imageData = ctx.createImageData(canvas.width, canvas.height);
                 var buddha = new Buddhabrot({
                     width: width,
                     height: height,
@@ -46,10 +47,9 @@
                     }
                     var image = buddha.getImage();
                     if (image) {
-                        var imageData = ctx.createImageData(canvas.width, canvas.height);
                         var pixels = imageData.data;
-                        var length = imageData.width * imageData.height;
-                        for (var i = 0; i < length; i++) {
+                        var len = imageData.width * imageData.height;
+                        for (var i = 0; i < len; i++) {
                             var idx = i * 4;
                             pixels[idx + 1] = 255 * image[i];
                             pixels[idx + 2] = 255 * image[i];
@@ -58,7 +58,7 @@
                         ctx.putImageData(imageData, 0, 0);
                     }
                 };
-                buddha.run(redraw);
+                buddha.run();
                 requestAnimationFrame(redraw);
             };
         })();
@@ -82,13 +82,14 @@
                 this.i = 0;
                 this.allocated = false;
                 this.complete = false;
+                this._scheduleBatchBound = this._scheduleBatch.bind(this);
             };
             Buddhabrot.prototype.run = function(callback) {
                 this.callback = callback || this.callback;
                 this.data.allocate();
                 this.allocated = true;
                 if (this.config.batched) {
-                    setTimeout(this._scheduleBatch.bind(this));
+                    setTimeout(this._scheduleBatchBound);
                 } else {
                     this._computeTrajectories();
                     this.callback(this.getImage());
@@ -103,7 +104,7 @@
             Buddhabrot.prototype._scheduleBatch = function() {
                 this._computeTrajectories();
                 if (!this.complete) {
-                    setTimeout(this._scheduleBatch.bind(this));
+                    setTimeout(this._scheduleBatchBound);
                 } else {
                     this.callback(this.getImage());
                 }
@@ -228,8 +229,8 @@
                     this.cache = new Float64Array(this.buf, this.config.cacheStart, this.config.cacheLength);
                 };
                 BuddhaData.prototype.normalizeImage = function() {
-                    var normalizer = this.normalizer || 1;
-                    for (var i = 0; i < this.config.pixels; i++) {
+                    var normalizer = this.normalizer || 1, i, l;
+                    for (i = 0, l = this.config.pixels; i < l; i++) {
                         this.normedImage[i] = this.image[i] / normalizer;
                     }
                 };

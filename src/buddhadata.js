@@ -35,9 +35,10 @@
      * Normalize the image hit counts by dividing by the recorded normalizer
      */
     BuddhaData.prototype.normalizeImage = function() {
-        var normalizer = this.normalizer || 1;
+        var normalizer = this.normalizer || 1,
+            i, l;
 
-        for (var i = 0; i < this.config.pixels; i++) {
+        for (i = 0, l = this.config.pixels; i < l; i++) {
             this.normedImage[i] = this.image[i] / normalizer;
         }
     };

@@ -14,6 +14,7 @@
             height = canvas.height;
 
         var ctx = canvas.getContext('2d');
+        var imageData = ctx.createImageData(canvas.width, canvas.height);
 
         // Compute buddhabrot
         var buddha = new Buddhabrot({
@@ -31,11 +32,10 @@
             var image = buddha.getImage();
 
             if (image) {
-                var imageData = ctx.createImageData(canvas.width, canvas.height);
                 var pixels = imageData.data;
-                var length = imageData.width * imageData.height;
+                var len = imageData.width * imageData.height;
 
-                for (var i = 0; i < length; i++) {
+                for (var i = 0; i < len; i++) {
                     var idx = i * 4;
                     // pixels[idx] = 255 * image[i];
                     pixels[idx+1] = 255 * image[i];
@@ -47,7 +47,7 @@
             }
         };
 
-        buddha.run(redraw);
+        buddha.run();
         requestAnimationFrame(redraw);
     };
 })();
