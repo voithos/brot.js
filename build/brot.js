@@ -64,14 +64,13 @@
         })();
     }, {
         "./buddhabrot": 2,
-        "./polyfills": 6
+        "./polyfills": 5
     } ],
     2: [ function(require, module, exports) {
         (function() {
             "use strict";
             var BuddhaConfig = require("./buddhaconfig");
             var BuddhaData = require("./buddhadata");
-            var Complex = require("./complex");
             var Buddhabrot = function(options) {
                 if (!(this instanceof Buddhabrot)) {
                     return new Buddhabrot(options);
@@ -123,18 +122,21 @@
                 }
             };
             Buddhabrot.prototype._traceTrajectory = function(cx, cy) {
-                var z = Complex(cy, cx), z0 = z.clone(), i = 0, maxEscapeIter = this.config.maxEscapeIter, data = this.data;
-                while (this._isBounded(z) && i < maxEscapeIter) {
-                    data.cacheTrajectory(z, i);
-                    z = z.isquared().iadd(z0);
+                var real = cy, imag = cx, real0 = real, imag0 = imag, i = 0, maxEscapeIter = this.config.maxEscapeIter, data = this.data, realPrime, imagPrime;
+                while (this._isBounded(real, imag) && i < maxEscapeIter) {
+                    data.cacheTrajectory(real, imag, i);
+                    realPrime = real * real - imag * imag + real0;
+                    imagPrime = 2 * imag * real + imag0;
+                    real = realPrime;
+                    imag = imagPrime;
                     i++;
                 }
                 if (this._checkCriteria(i)) {
                     data.saveTrajectory(i);
                 }
             };
-            Buddhabrot.prototype._isBounded = function(z) {
-                return !(z.real < this.config.ystart || z.real > this.config.yend || z.imag < this.config.xstart || z.imag > this.config.xend);
+            Buddhabrot.prototype._isBounded = function(real, imag) {
+                return !(real < this.config.ystart || real > this.config.yend || imag < this.config.xstart || imag > this.config.xend);
             };
             Buddhabrot.prototype._checkCriteria = function(iteration) {
                 if (this.config.anti) {
@@ -147,8 +149,7 @@
         })();
     }, {
         "./buddhaconfig": 3,
-        "./buddhadata": 4,
-        "./complex": 5
+        "./buddhadata": 4
     } ],
     3: [ function(require, module, exports) {
         (function() {
@@ -232,10 +233,10 @@
                         this.normedImage[i] = this.image[i] / normalizer;
                     }
                 };
-                BuddhaData.prototype.cacheTrajectory = function(z, i) {
+                BuddhaData.prototype.cacheTrajectory = function(real, imag, i) {
                     var offset = 2 * i;
-                    this.cache[offset] = z.real;
-                    this.cache[offset + 1] = z.imag;
+                    this.cache[offset] = real;
+                    this.cache[offset + 1] = imag;
                 };
                 BuddhaData.prototype.saveTrajectory = function(iterationCount) {
                     var xstart = this.config.xstart, xend = this.config.xend, ystart = this.config.ystart, yend = this.config.yend, dx = this.config.dx, dy = this.config.dy, width = this.config.width, i, offset, x, y, row, col, index, hits;
@@ -260,111 +261,6 @@
         })();
     }, {} ],
     5: [ function(require, module, exports) {
-        (function() {
-            "use strict";
-            var Complex = function(real, imag) {
-                if (!(this instanceof Complex)) {
-                    return new Complex(real, imag);
-                }
-                this.real = Number(real) || 0;
-                this.imag = Number(imag) || 0;
-            };
-            Complex.prototype.clone = function() {
-                return new Complex(this.real, this.imag);
-            };
-            Complex.toComplex = function(other) {
-                if (other instanceof Complex) {
-                    return other;
-                } else {
-                    return new Complex(Number(other) || 0, 0);
-                }
-            };
-            Complex.prototype.add = function(other) {
-                return this.clone().iadd(other);
-            };
-            Complex.prototype.iadd = function(other) {
-                other = Complex.toComplex(other);
-                this.real = this.real + other.real;
-                this.imag = this.imag + other.imag;
-                return this;
-            };
-            Complex.prototype.sub = function(other) {
-                return this.clone().isub(other);
-            };
-            Complex.prototype.isub = function(other) {
-                other = Complex.toComplex(other);
-                this.real = this.real - other.real;
-                this.imag = this.imag - other.imag;
-                return this;
-            };
-            Complex.prototype.mult = function(other) {
-                return this.clone().imult(other);
-            };
-            Complex.prototype.imult = function(other) {
-                other = Complex.toComplex(other);
-                var real = this.real * other.real - this.imag * other.imag, imag = this.imag * other.real + this.real * other.imag;
-                this.real = real;
-                this.imag = imag;
-                return this;
-            };
-            Complex.prototype.div = function(other) {
-                return this.clone().idiv(other);
-            };
-            Complex.prototype.idiv = function(other) {
-                other = Complex.toComplex(other);
-                var denom = other.real * other.real + other.imag * other.imag, real = (this.real * other.real + this.imag * other.imag) / denom, imag = (this.imag * other.real - this.real * other.imag) / denom;
-                this.real = real;
-                this.imag = imag;
-                return this;
-            };
-            Complex.prototype.conjugate = function() {
-                return this.clone().iconjugate();
-            };
-            Complex.prototype.iconjugate = function() {
-                this.imag = -this.imag;
-                return this;
-            };
-            Complex.prototype.abs = function() {
-                return Math.sqrt(this.real * this.real + this.imag * this.imag);
-            };
-            Complex.prototype.pow = function(n) {
-                return this.clone().ipow(n);
-            };
-            Complex.prototype.ipow = function(n) {
-                var i, c;
-                n = Number(n) || 0;
-                if (n === 0) {
-                    this.real = 1;
-                    this.imag = 0;
-                } else if (n < 0) {
-                    n = -n;
-                    c = this.clone();
-                    for (i = 1; i < n; i++) {
-                        c.imult(this);
-                    }
-                    this.real = 1;
-                    this.imag = 0;
-                    this.idiv(c);
-                } else {
-                    c = this.clone();
-                    for (i = 1; i < n; i++) {
-                        c.imult(this);
-                    }
-                    this.real = c.real;
-                    this.imag = c.imag;
-                }
-                return this;
-            };
-            Complex.prototype.squared = function() {
-                return this.clone().ipow(2);
-            };
-            Complex.prototype.isquared = function() {
-                return this.ipow(2);
-            };
-            module.exports = Complex;
-        })();
-    }, {} ],
-    6: [ function(require, module, exports) {
         (function() {
             "use strict";
             (function() {

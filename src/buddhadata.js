@@ -46,11 +46,11 @@
      * Retain the real and imaginary parts of a complex point
      * within the cache
      */
-    BuddhaData.prototype.cacheTrajectory = function(z, i) {
+    BuddhaData.prototype.cacheTrajectory = function(real, imag, i) {
         // Offset is 2 * i, because each complex number requires 2 floats
         var offset = 2 * i;
-        this.cache[offset] = z.real;
-        this.cache[offset + 1] = z.imag;
+        this.cache[offset] = real;
+        this.cache[offset + 1] = imag;
     };
 
     /**

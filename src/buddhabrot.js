@@ -3,7 +3,6 @@
 
     var BuddhaConfig = require('./buddhaconfig');
     var BuddhaData = require('./buddhadata');
-    var Complex = require('./complex');
 
     var Buddhabrot = function(options) {
         if (!(this instanceof Buddhabrot)) {
@@ -96,18 +95,25 @@
      */
     Buddhabrot.prototype._traceTrajectory = function(cx, cy) {
         // y is the real axis, x is the imaginary
-        var z = Complex(cy, cx),
-            z0 = z.clone(),
+        var real = cy,
+            imag = cx,
+            real0 = real,
+            imag0 = imag,
             i = 0,
             maxEscapeIter = this.config.maxEscapeIter,
-            data = this.data;
+            data = this.data,
+            realPrime, imagPrime;
 
         // Repeat until escape, or maximum iteration count is reached
-        while (this._isBounded(z) && i < maxEscapeIter) {
-            data.cacheTrajectory(z, i);
+        while (this._isBounded(real, imag) && i < maxEscapeIter) {
+            data.cacheTrajectory(real, imag, i);
 
             // Mandelbrot function
-            z = z.isquared().iadd(z0);
+            // z' = z^2 + z0
+            realPrime = (real * real - imag * imag) + real0;
+            imagPrime = (2 * imag * real) + imag0;
+            real = realPrime;
+            imag = imagPrime;
 
             i++;
         }
@@ -122,9 +128,9 @@
      * Return a value indicating whether the complex number is bounded
      * within the viewable area
      */
-    Buddhabrot.prototype._isBounded = function(z) {
-        return !(z.real < this.config.ystart || z.real > this.config.yend ||
-                 z.imag < this.config.xstart || z.imag > this.config.xend);
+    Buddhabrot.prototype._isBounded = function(real, imag) {
+        return !(real < this.config.ystart || real > this.config.yend ||
+                 imag < this.config.xstart || imag > this.config.xend);
     };
 
     /**
