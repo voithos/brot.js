@@ -23,36 +23,14 @@
     return i;
 })({
     1: [ function(require, module, exports) {
-        (function($) {
+        (function() {
             "use strict";
-            (function() {
-                var lastTime = 0, vendors = [ "ms", "moz", "webkit", "o" ], i;
-                for (i = 0; i < vendors.length && !window.requestAnimationFrame; i++) {
-                    window.requestAnimationFrame = window[vendors[i] + "RequestAnimationFrame"];
-                    window.cancelAnimationFrame = window[vendors[i] + "CancelAnimationFrame"] || window[vendors[i] + "CancelRequestAnimationFrame"];
-                }
-                if (!window.requestAnimationFrame) {
-                    window.requestAnimationFrame = function(callback, element) {
-                        var currTime = new Date().getTime();
-                        var timeToCall = Math.max(0, 16 - (currTime - lastTime));
-                        var id = setTimeout(function() {
-                            callback(currTime + timeToCall);
-                        }, timeToCall);
-                        lastTime = currTime + timeToCall;
-                        return id;
-                    };
-                }
-                if (!window.cancelAnimationFrame) {
-                    window.cancelAnimationFrame = function(id) {
-                        clearTimeout(id);
-                    };
-                }
-            })();
+            var _ = require("./polyfills");
             var Buddhabrot = require("./buddhabrot");
-            $(document).ready(function() {
+            window.onload = function() {
                 var canvas = document.getElementById("main");
-                canvas.width = window.innerWidth * .8 | 0;
-                canvas.height = window.innerHeight * .8 | 0;
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
                 var width = canvas.width, height = canvas.height;
                 var ctx = canvas.getContext("2d");
                 var buddha = new Buddhabrot({
@@ -82,30 +60,15 @@
                 };
                 buddha.run(redraw);
                 requestAnimationFrame(redraw);
-            });
-        })(jQuery);
+            };
+        })();
     }, {
-        "./buddhabrot": 2
+        "./buddhabrot": 2,
+        "./polyfills": 6
     } ],
     2: [ function(require, module, exports) {
         (function() {
             "use strict";
-            (function() {
-                if (!("bind" in Function.prototype)) {
-                    Function.prototype.bind = function(to) {
-                        var splice = Array.prototype.splice, partialArgs = splice.call(arguments, 1), fn = this;
-                        var bound = function() {
-                            var args = partialArgs.concat(splice.call(arguments, 0));
-                            if (!(this instanceof bound)) {
-                                return fn.apply(to, args);
-                            }
-                            fn.apply(this, args);
-                        };
-                        bound.prototype = fn.prototype;
-                        return bound;
-                    };
-                }
-            })();
             var BuddhaConfig = require("./buddhaconfig");
             var BuddhaData = require("./buddhadata");
             var Complex = require("./complex");
@@ -171,8 +134,7 @@
                 }
             };
             Buddhabrot.prototype._isBounded = function(z) {
-                var ESCAPE_LIMIT = 4;
-                return z.real * z.real + z.imag * z.imag < ESCAPE_LIMIT;
+                return !(z.real < this.config.ystart || z.real > this.config.yend || z.imag < this.config.xstart || z.imag > this.config.xend);
             };
             Buddhabrot.prototype._checkCriteria = function(iteration) {
                 if (this.config.anti) {
@@ -400,6 +362,50 @@
                 return this.ipow(2);
             };
             module.exports = Complex;
+        })();
+    }, {} ],
+    6: [ function(require, module, exports) {
+        (function() {
+            "use strict";
+            (function() {
+                var lastTime = 0, vendors = [ "ms", "moz", "webkit", "o" ], i;
+                for (i = 0; i < vendors.length && !window.requestAnimationFrame; i++) {
+                    window.requestAnimationFrame = window[vendors[i] + "RequestAnimationFrame"];
+                    window.cancelAnimationFrame = window[vendors[i] + "CancelAnimationFrame"] || window[vendors[i] + "CancelRequestAnimationFrame"];
+                }
+                if (!window.requestAnimationFrame) {
+                    window.requestAnimationFrame = function(callback, element) {
+                        var currTime = new Date().getTime();
+                        var timeToCall = Math.max(0, 16 - (currTime - lastTime));
+                        var id = setTimeout(function() {
+                            callback(currTime + timeToCall);
+                        }, timeToCall);
+                        lastTime = currTime + timeToCall;
+                        return id;
+                    };
+                }
+                if (!window.cancelAnimationFrame) {
+                    window.cancelAnimationFrame = function(id) {
+                        clearTimeout(id);
+                    };
+                }
+            })();
+            (function() {
+                if (!("bind" in Function.prototype)) {
+                    Function.prototype.bind = function(to) {
+                        var splice = Array.prototype.splice, partialArgs = splice.call(arguments, 1), fn = this;
+                        var bound = function() {
+                            var args = partialArgs.concat(splice.call(arguments, 0));
+                            if (!(this instanceof bound)) {
+                                return fn.apply(to, args);
+                            }
+                            fn.apply(this, args);
+                        };
+                        bound.prototype = fn.prototype;
+                        return bound;
+                    };
+                }
+            })();
         })();
     }, {} ]
 }, {}, [ 1 ]);

@@ -1,0 +1,13 @@
+body {
+    margin: 0;
+    padding: 0;
+}
+
+#main {
+    /* Canvas is inline by default, causing a height offset due to
+     * vertical-align: baseline; */
+    display: block;
+
+    margin: 0;
+    padding: 0;
+}

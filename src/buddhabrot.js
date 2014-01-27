@@ -1,30 +1,6 @@
 (function() {
     'use strict';
 
-    /**
-     * Function.bind polyfill
-     */
-    (function() {
-        if (!('bind' in Function.prototype)) {
-            Function.prototype.bind = function(to) {
-                var splice = Array.prototype.splice,
-                    partialArgs = splice.call(arguments, 1),
-                    fn = this;
-
-                var bound = function() {
-                    var args = partialArgs.concat(splice.call(arguments, 0));
-                    if (!(this instanceof bound)) {
-                        return fn.apply(to, args);
-                    }
-                    fn.apply(this, args);
-                };
-
-                bound.prototype = fn.prototype;
-                return bound;
-            };
-        }
-    })();
-
     var BuddhaConfig = require('./buddhaconfig');
     var BuddhaData = require('./buddhadata');
     var Complex = require('./complex');
