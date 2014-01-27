@@ -17,7 +17,7 @@
      */
     BuddhaData.prototype.allocate = function() {
         if (!this.config.initialized) {
-            throw 'BuddhaConfig has not been initialized';
+            throw new Error('BuddhaConfig has not been initialized');
         }
 
         // Setup buffer and buffer views

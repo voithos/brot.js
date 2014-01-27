@@ -4,28 +4,47 @@
     var _ = require('./polyfills');
     var Buddhabrot = require('./buddhabrot');
 
-    window.onload = function() {
-        // Setup the canvas
+    var setupCanvas = function() {
         var canvas = document.getElementById('main');
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
-        var width = canvas.width,
-            height = canvas.height;
+        return canvas;
+    };
 
+    var setupGUI = function(buddha, config) {
+        var gui = new dat.GUI();
+
+        var coreFolder = gui.addFolder('Core');
+
+        // Create fake listener on local config object to simulate
+        // a logarithmic scale for the purposes of maxEscapeIter
+        var escapeCtrl = coreFolder.add(config, 'maxEscapeIter', 1, 30);
+        escapeCtrl.onFinishChange(function(value) {
+            value = (Math.pow(2, value / 2) + 2) | 0;
+            buddha.config.maxEscapeIter = value;
+        });
+
+        coreFolder.add(buddha.config, 'batchSize', 1000, 100000);
+        coreFolder.add(buddha.config, 'anti');
+        coreFolder.open();
+
+        var colorFolder = gui.addFolder('Color');
+        colorFolder.add(config, 'red', 0, 255);
+        colorFolder.add(config, 'green', 0, 255);
+        colorFolder.add(config, 'blue', 0, 255);
+        colorFolder.add(config, 'alpha', 0, 255);
+
+        return gui;
+    };
+
+    var createDrawHandler = function(canvas, buddha, config) {
         var ctx = canvas.getContext('2d');
         var imageData = ctx.createImageData(canvas.width, canvas.height);
 
-        // Compute buddhabrot
-        var buddha = new Buddhabrot({
-            width: width,
-            height: height,
-            batched: true
-        });
-
-        var redraw = function() {
+        var draw = function() {
             if (!buddha.complete) {
-                requestAnimationFrame(redraw);
+                requestAnimationFrame(draw);
             } else {
                 console.log('complete');
             }
@@ -37,17 +56,44 @@
 
                 for (var i = 0; i < len; i++) {
                     var idx = i * 4;
-                    // pixels[idx] = 255 * image[i];
-                    pixels[idx+1] = 255 * image[i];
-                    pixels[idx+2] = 255 * image[i];
-                    pixels[idx+3] = 255;
+                    pixels[idx] = config.red * image[i];
+                    pixels[idx+1] = config.green * image[i];
+                    pixels[idx+2] = config.blue * image[i];
+                    pixels[idx+3] = config.alpha;
                 }
 
                 ctx.putImageData(imageData, 0, 0);
             }
         };
 
+        return draw;
+    };
+
+    window.onload = function() {
+        var canvas = setupCanvas();
+
+        var buddha = new Buddhabrot({
+            width: canvas.width,
+            height: canvas.height,
+            batched: true,
+            infinite: true
+        });
+
+        var config = {
+            maxEscapeIter: 4,
+
+            red: 0,
+            green: 255,
+            blue: 255,
+            alpha: 255
+        };
+
+        var gui = setupGUI(buddha, config);
+
+        var draw = createDrawHandler(canvas, buddha, config);
+
+        // Begin animations
         buddha.run();
-        requestAnimationFrame(redraw);
+        requestAnimationFrame(draw);
     };
 })();

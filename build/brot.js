@@ -27,21 +27,36 @@
             "use strict";
             var _ = require("./polyfills");
             var Buddhabrot = require("./buddhabrot");
-            window.onload = function() {
+            var setupCanvas = function() {
                 var canvas = document.getElementById("main");
                 canvas.width = window.innerWidth;
                 canvas.height = window.innerHeight;
-                var width = canvas.width, height = canvas.height;
+                return canvas;
+            };
+            var setupGUI = function(buddha, config) {
+                var gui = new dat.GUI();
+                var coreFolder = gui.addFolder("Core");
+                var escapeCtrl = coreFolder.add(config, "maxEscapeIter", 1, 30);
+                escapeCtrl.onFinishChange(function(value) {
+                    value = Math.pow(2, value / 2) + 2 | 0;
+                    buddha.config.maxEscapeIter = value;
+                });
+                coreFolder.add(buddha.config, "batchSize", 1e3, 1e5);
+                coreFolder.add(buddha.config, "anti");
+                coreFolder.open();
+                var colorFolder = gui.addFolder("Color");
+                colorFolder.add(config, "red", 0, 255);
+                colorFolder.add(config, "green", 0, 255);
+                colorFolder.add(config, "blue", 0, 255);
+                colorFolder.add(config, "alpha", 0, 255);
+                return gui;
+            };
+            var createDrawHandler = function(canvas, buddha, config) {
                 var ctx = canvas.getContext("2d");
                 var imageData = ctx.createImageData(canvas.width, canvas.height);
-                var buddha = new Buddhabrot({
-                    width: width,
-                    height: height,
-                    batched: true
-                });
-                var redraw = function() {
+                var draw = function() {
                     if (!buddha.complete) {
-                        requestAnimationFrame(redraw);
+                        requestAnimationFrame(draw);
                     } else {
                         console.log("complete");
                     }
@@ -51,15 +66,35 @@
                         var len = imageData.width * imageData.height;
                         for (var i = 0; i < len; i++) {
                             var idx = i * 4;
-                            pixels[idx + 1] = 255 * image[i];
-                            pixels[idx + 2] = 255 * image[i];
-                            pixels[idx + 3] = 255;
+                            pixels[idx] = config.red * image[i];
+                            pixels[idx + 1] = config.green * image[i];
+                            pixels[idx + 2] = config.blue * image[i];
+                            pixels[idx + 3] = config.alpha;
                         }
                         ctx.putImageData(imageData, 0, 0);
                     }
                 };
+                return draw;
+            };
+            window.onload = function() {
+                var canvas = setupCanvas();
+                var buddha = new Buddhabrot({
+                    width: canvas.width,
+                    height: canvas.height,
+                    batched: true,
+                    infinite: true
+                });
+                var config = {
+                    maxEscapeIter: 4,
+                    red: 0,
+                    green: 255,
+                    blue: 255,
+                    alpha: 255
+                };
+                var gui = setupGUI(buddha, config);
+                var draw = createDrawHandler(canvas, buddha, config);
                 buddha.run();
-                requestAnimationFrame(redraw);
+                requestAnimationFrame(draw);
             };
         })();
     }, {
@@ -110,7 +145,7 @@
                 }
             };
             Buddhabrot.prototype._computeTrajectories = function() {
-                var i = this.i, l = this.config.iterations, batchend = i + this.config.batchSize, end = batchend < l ? batchend : l, xstart = this.config.xstart, xlength = this.config.xlength, ystart = this.config.ystart, ylength = this.config.ylength, cx, cy;
+                var i = this.i, l = this.config.iterations, batchend = i + this.config.batchSize, end = batchend < l || this.config.infinite ? batchend : l, xstart = this.config.xstart, xlength = this.config.xlength, ystart = this.config.ystart, ylength = this.config.ylength, cx, cy;
                 for (;i < end; i++) {
                     cx = xstart + Math.random() * xlength;
                     cy = ystart + Math.random() * ylength;
@@ -118,7 +153,7 @@
                 }
                 this.i = i;
                 this.data.normalizeImage();
-                if (this.i === l) {
+                if (this.i === l && !this.config.infinite) {
                     this.complete = true;
                 }
             };
@@ -161,9 +196,13 @@
                 }
                 this.width = options.width || options.w;
                 this.height = options.height || options.h;
+                if (options.infinite && !options.batched) {
+                    throw new Error("An infinite BuddhaBrot must be batched");
+                }
+                this.infinite = options.infinite || false;
                 this.iterations = options.iterations || 1e9;
                 this.maxEscapeIter = options.maxEscapeIter || options.max || 20;
-                this.batched = options.batch === false ? false : true;
+                this.batched = !options.batched ? false : true;
                 this.batchSize = (options.batchSize < 0 ? null : options.batchSize) || 5e4;
                 this.anti = options.anti || false;
                 if (!this.batched) {
@@ -221,7 +260,7 @@
                 };
                 BuddhaData.prototype.allocate = function() {
                     if (!this.config.initialized) {
-                        throw "BuddhaConfig has not been initialized";
+                        throw new Error("BuddhaConfig has not been initialized");
                     }
                     this.buf = new ArrayBuffer(this.config.bufLength);
                     this.image = new Int32Array(this.buf, this.config.imageStart, this.config.imageLength);

@@ -72,7 +72,7 @@
         var i = this.i,
             l = this.config.iterations,
             batchend = i + this.config.batchSize,
-            end = batchend < l ? batchend : l,
+            end = batchend < l || this.config.infinite ? batchend : l,
             xstart = this.config.xstart,
             xlength = this.config.xlength,
             ystart = this.config.ystart,
@@ -88,7 +88,7 @@
         this.i = i;
         this.data.normalizeImage();
 
-        if (this.i === l) {
+        if (this.i === l && !this.config.infinite) {
             this.complete = true;
         }
     };
