@@ -37,12 +37,13 @@
                 var gui = new dat.GUI();
                 var coreFolder = gui.addFolder("Core");
                 var escapeCtrl = coreFolder.add(config, "maxEscapeIter", 1, 30);
-                escapeCtrl.onFinishChange(function(value) {
+                escapeCtrl.onChange(function(value) {
                     value = Math.pow(2, value / 2) + 2 | 0;
                     buddha.config.maxEscapeIter = value;
                 });
                 coreFolder.add(buddha.config, "batchSize", 1e3, 1e5);
                 coreFolder.add(buddha.config, "anti");
+                coreFolder.add(buddha, "resetImage");
                 coreFolder.open();
                 var colorFolder = gui.addFolder("Color");
                 colorFolder.add(config, "red", 0, 255);
@@ -85,7 +86,7 @@
                     infinite: true
                 });
                 var config = {
-                    maxEscapeIter: 4,
+                    maxEscapeIter: 8.6,
                     red: 0,
                     green: 255,
                     blue: 255,
@@ -135,6 +136,12 @@
                     return undefined;
                 }
                 return this.data.normedImage;
+            };
+            Buddhabrot.prototype.resetImage = function() {
+                if (!this.allocated) {
+                    return;
+                }
+                this.data.resetImage();
             };
             Buddhabrot.prototype._scheduleBatch = function() {
                 this._computeTrajectories();
@@ -266,6 +273,13 @@
                     this.image = new Int32Array(this.buf, this.config.imageStart, this.config.imageLength);
                     this.normedImage = new Float64Array(this.buf, this.config.normedImageStart, this.config.normedImageLength);
                     this.cache = new Float64Array(this.buf, this.config.cacheStart, this.config.cacheLength);
+                };
+                BuddhaData.prototype.resetImage = function() {
+                    var i, l;
+                    for (i = 0, l = this.config.pixels; i < l; i++) {
+                        this.image[i] = 0;
+                    }
+                    this.normalizer = 0;
                 };
                 BuddhaData.prototype.normalizeImage = function() {
                     var normalizer = this.normalizer || 1, i, l;

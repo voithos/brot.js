@@ -51,6 +51,16 @@
     };
 
     /**
+     * Reset the image data
+     */
+    Buddhabrot.prototype.resetImage = function() {
+        if (!this.allocated) {
+            return;
+        }
+        this.data.resetImage();
+    };
+
+    /**
      * Schedule a batch run of computations (batches are required
      * because redraws require a context switch)
      */

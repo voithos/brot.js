@@ -32,6 +32,19 @@
     };
 
     /**
+     * Reset the image data
+     */
+    BuddhaData.prototype.resetImage = function() {
+        var i, l;
+        for (i = 0, l = this.config.pixels; i < l; i++) {
+            this.image[i] = 0;
+        }
+
+        // Reset normalizer
+        this.normalizer = 0;
+    };
+
+    /**
      * Normalize the image hit counts by dividing by the recorded normalizer
      */
     BuddhaData.prototype.normalizeImage = function() {

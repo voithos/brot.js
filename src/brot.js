@@ -20,13 +20,14 @@
         // Create fake listener on local config object to simulate
         // a logarithmic scale for the purposes of maxEscapeIter
         var escapeCtrl = coreFolder.add(config, 'maxEscapeIter', 1, 30);
-        escapeCtrl.onFinishChange(function(value) {
+        escapeCtrl.onChange(function(value) {
             value = (Math.pow(2, value / 2) + 2) | 0;
             buddha.config.maxEscapeIter = value;
         });
 
         coreFolder.add(buddha.config, 'batchSize', 1000, 100000);
         coreFolder.add(buddha.config, 'anti');
+        coreFolder.add(buddha, 'resetImage');
         coreFolder.open();
 
         var colorFolder = gui.addFolder('Color');
@@ -80,8 +81,11 @@
         });
 
         var config = {
-            maxEscapeIter: 4,
+            // 8.4 is roughly 1/2 * log[base2](20), which is the default maxIter
+            // See the setupGUI function for the logarithm emulation function
+            maxEscapeIter: 8.6,
 
+            // Cyan
             red: 0,
             green: 255,
             blue: 255,
