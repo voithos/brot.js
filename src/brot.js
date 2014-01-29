@@ -16,6 +16,9 @@
         var gui = new dat.GUI();
 
         var coreFolder = gui.addFolder('Core');
+        coreFolder.add(buddha, 'pause');
+        coreFolder.add(buddha, 'resume');
+        coreFolder.add(buddha, 'resetImage');
 
         // Create fake listener on local config object to simulate
         // a logarithmic scale for the purposes of maxEscapeIter
@@ -27,7 +30,6 @@
 
         coreFolder.add(buddha.config, 'batchSize', 1000, 100000);
         coreFolder.add(buddha.config, 'anti');
-        coreFolder.add(buddha, 'resetImage');
         coreFolder.open();
 
         var colorFolder = gui.addFolder('Color');

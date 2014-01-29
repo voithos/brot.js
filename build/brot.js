@@ -36,6 +36,9 @@
             var setupGUI = function(buddha, config) {
                 var gui = new dat.GUI();
                 var coreFolder = gui.addFolder("Core");
+                coreFolder.add(buddha, "pause");
+                coreFolder.add(buddha, "resume");
+                coreFolder.add(buddha, "resetImage");
                 var escapeCtrl = coreFolder.add(config, "maxEscapeIter", 1, 30);
                 escapeCtrl.onChange(function(value) {
                     value = Math.pow(2, value / 2) + 2 | 0;
@@ -43,7 +46,6 @@
                 });
                 coreFolder.add(buddha.config, "batchSize", 1e3, 1e5);
                 coreFolder.add(buddha.config, "anti");
-                coreFolder.add(buddha, "resetImage");
                 coreFolder.open();
                 var colorFolder = gui.addFolder("Color");
                 colorFolder.add(config, "red", 0, 255);
@@ -117,6 +119,7 @@
                 this.callback = options.callback || function() {};
                 this.i = 0;
                 this.allocated = false;
+                this.paused = false;
                 this.complete = false;
                 this._scheduleBatchBound = this._scheduleBatch.bind(this);
             };
@@ -129,6 +132,15 @@
                 } else {
                     this._computeTrajectories();
                     this.callback(this.getImage());
+                }
+            };
+            Buddhabrot.prototype.pause = function() {
+                this.paused = true;
+            };
+            Buddhabrot.prototype.resume = function() {
+                if (this.paused) {
+                    setTimeout(this._scheduleBatchBound);
+                    this.paused = false;
                 }
             };
             Buddhabrot.prototype.getImage = function() {
@@ -146,7 +158,9 @@
             Buddhabrot.prototype._scheduleBatch = function() {
                 this._computeTrajectories();
                 if (!this.complete) {
-                    setTimeout(this._scheduleBatchBound);
+                    if (!this.paused) {
+                        setTimeout(this._scheduleBatchBound);
+                    }
                 } else {
                     this.callback(this.getImage());
                 }

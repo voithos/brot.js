@@ -18,9 +18,10 @@
 
         // Flags
         this.allocated = false;
+        this.paused = false;
         this.complete = false;
 
-        // Cached objects, to avoid garbage collector hits
+        // Cached objects
         this._scheduleBatchBound = this._scheduleBatch.bind(this);
     };
 
@@ -37,6 +38,23 @@
         } else {
             this._computeTrajectories();
             this.callback(this.getImage());
+        }
+    };
+
+    /**
+     * Pause the current execution of batched Buddhabrot
+     */
+    Buddhabrot.prototype.pause = function() {
+        this.paused = true;
+    };
+
+    /**
+     * Resume execution of batched Buddhabrot if paused
+     */
+    Buddhabrot.prototype.resume = function() {
+        if (this.paused) {
+            setTimeout(this._scheduleBatchBound);
+            this.paused = false;
         }
     };
 
@@ -68,7 +86,9 @@
         this._computeTrajectories();
 
         if (!this.complete) {
-            setTimeout(this._scheduleBatchBound);
+            if (!this.paused) {
+                setTimeout(this._scheduleBatchBound);
+            }
         } else {
             this.callback(this.getImage());
         }
