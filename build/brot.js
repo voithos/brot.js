@@ -292,6 +292,7 @@
                     var i, l;
                     for (i = 0, l = this.config.pixels; i < l; i++) {
                         this.image[i] = 0;
+                        this.normedImage[i] = 0;
                     }
                     this.normalizer = 0;
                 };
