@@ -33,13 +33,48 @@
                 canvas.height = window.innerHeight;
                 return canvas;
             };
-            var setupGUI = function(buddha, config) {
-                var gui = new dat.GUI();
-                var coreFolder = gui.addFolder("Core");
+            var BrotJS = function(canvas) {
+                this.canvas = canvas;
+                this.count = 0;
+                this.buddhas = [];
+                this.states = [];
+                this.setupGUI();
+            };
+            BrotJS.prototype.run = function() {
+                this.addBuddhabrot();
+                var draw = this.createDrawHandler();
+                requestAnimationFrame(draw);
+            };
+            BrotJS.prototype.addBuddhabrot = function() {
+                this.count++;
+                var buddha = new Buddhabrot({
+                    width: this.canvas.width,
+                    height: this.canvas.height,
+                    batched: true,
+                    infinite: true
+                });
+                this.buddhas.push(buddha);
+                var state = {
+                    maxEscapeIter: 8.6,
+                    red: 0,
+                    green: 255,
+                    blue: 255,
+                    alpha: 255
+                };
+                this.states.push(state);
+                this.addToGUI(buddha, state);
+                buddha.run();
+            };
+            BrotJS.prototype.setupGUI = function() {
+                this.gui = new dat.GUI();
+                this.gui.add(this, "addBuddhabrot");
+            };
+            BrotJS.prototype.addToGUI = function(buddha, state) {
+                var coreFolder = this.gui.addFolder("Config " + this.count);
                 coreFolder.add(buddha, "pause");
                 coreFolder.add(buddha, "resume");
                 coreFolder.add(buddha, "resetImage");
-                var escapeCtrl = coreFolder.add(config, "maxEscapeIter", 1, 30);
+                var escapeCtrl = coreFolder.add(state, "maxEscapeIter", 1, 30);
                 escapeCtrl.onChange(function(value) {
                     value = Math.pow(2, value / 2) + 2 | 0;
                     buddha.config.maxEscapeIter = value;
@@ -47,57 +82,71 @@
                 coreFolder.add(buddha.config, "batchSize", 1e3, 1e5);
                 coreFolder.add(buddha.config, "anti");
                 coreFolder.open();
-                var colorFolder = gui.addFolder("Color");
-                colorFolder.add(config, "red", 0, 255);
-                colorFolder.add(config, "green", 0, 255);
-                colorFolder.add(config, "blue", 0, 255);
-                colorFolder.add(config, "alpha", 0, 255);
-                return gui;
+                var colorFolder = this.gui.addFolder("Color " + this.count);
+                colorFolder.add(state, "red", 0, 255);
+                colorFolder.add(state, "green", 0, 255);
+                colorFolder.add(state, "blue", 0, 255);
+                colorFolder.add(state, "alpha", 0, 255);
             };
-            var createDrawHandler = function(canvas, buddha, config) {
+            BrotJS.prototype.createDrawHandler = function() {
+                var self = this;
+                var canvas = self.canvas;
                 var ctx = canvas.getContext("2d");
                 var imageData = ctx.createImageData(canvas.width, canvas.height);
+                var components = [ "red", "green", "blue", "alpha" ];
+                var areComplete = function() {
+                    var complete = true;
+                    for (var i = 0; i < self.count; i++) {
+                        if (!self.buddhas[i].complete) {
+                            complete = false;
+                        }
+                    }
+                    return complete;
+                };
+                var getImages = function() {
+                    var images = [], i, image;
+                    for (i = 0; i < self.count; i++) {
+                        image = self.buddhas[i].getImage();
+                        if (image) {
+                            images.push(image);
+                        }
+                    }
+                    return images;
+                };
+                var combinePixels = function(pixels, idx, images, i) {
+                    var red = 0, green = 0, blue = 0, len = images.length, j, image, state, alpha;
+                    for (j = 0; j < len; j++) {
+                        image = images[j];
+                        state = self.states[j];
+                        alpha = state.alpha / 255;
+                        red += state.red * image[i] * alpha;
+                        green += state.green * image[i] * alpha;
+                        blue += state.blue * image[i] * alpha;
+                    }
+                    pixels[idx] = red / len;
+                    pixels[idx + 1] = green / len;
+                    pixels[idx + 2] = blue / len;
+                    pixels[idx + 3] = 255;
+                };
                 var draw = function() {
-                    if (!buddha.complete) {
+                    if (!areComplete()) {
                         requestAnimationFrame(draw);
                     } else {
-                        console.log("complete");
+                        console.log("all complete");
                     }
-                    var image = buddha.getImage();
-                    if (image) {
-                        var pixels = imageData.data;
-                        var len = imageData.width * imageData.height;
-                        for (var i = 0; i < len; i++) {
-                            var idx = i * 4;
-                            pixels[idx] = config.red * image[i];
-                            pixels[idx + 1] = config.green * image[i];
-                            pixels[idx + 2] = config.blue * image[i];
-                            pixels[idx + 3] = config.alpha;
-                        }
-                        ctx.putImageData(imageData, 0, 0);
+                    var images = getImages(), pixels = imageData.data, len = imageData.width * imageData.height, i;
+                    for (i = 0; i < len; i++) {
+                        var idx = i * 4;
+                        combinePixels(pixels, idx, images, i);
                     }
+                    ctx.putImageData(imageData, 0, 0);
                 };
                 return draw;
             };
             window.onload = function() {
                 var canvas = setupCanvas();
-                var buddha = new Buddhabrot({
-                    width: canvas.width,
-                    height: canvas.height,
-                    batched: true,
-                    infinite: true
-                });
-                var config = {
-                    maxEscapeIter: 8.6,
-                    red: 0,
-                    green: 255,
-                    blue: 255,
-                    alpha: 255
-                };
-                var gui = setupGUI(buddha, config);
-                var draw = createDrawHandler(canvas, buddha, config);
-                buddha.run();
-                requestAnimationFrame(draw);
+                var brot = new BrotJS(canvas);
+                brot.run();
             };
         })();
     }, {
