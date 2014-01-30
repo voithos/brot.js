@@ -55,6 +55,7 @@
                 });
                 this.buddhas.push(buddha);
                 var state = {
+                    paused: false,
                     maxEscapeIter: 8.6,
                     red: 0,
                     green: 255,
@@ -71,8 +72,14 @@
             };
             BrotJS.prototype.addToGUI = function(buddha, state) {
                 var coreFolder = this.gui.addFolder("Config " + this.count);
-                coreFolder.add(buddha, "pause");
-                coreFolder.add(buddha, "resume");
+                var pausedCtrl = coreFolder.add(state, "paused");
+                pausedCtrl.onChange(function(paused) {
+                    if (paused) {
+                        buddha.pause();
+                    } else {
+                        buddha.resume();
+                    }
+                });
                 coreFolder.add(buddha, "resetImage");
                 var escapeCtrl = coreFolder.add(state, "maxEscapeIter", 1, 30);
                 escapeCtrl.onChange(function(value) {

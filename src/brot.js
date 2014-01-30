@@ -51,6 +51,8 @@
         this.buddhas.push(buddha);
 
         var state = {
+            paused: false,
+
             // 8.4 is roughly 1/2 * log[base2](20), which is the default maxIter
             // See the setupGUI function for the logarithm emulation function
             maxEscapeIter: 8.6,
@@ -74,8 +76,18 @@
 
     BrotJS.prototype.addToGUI = function(buddha, state) {
         var coreFolder = this.gui.addFolder('Config ' + this.count);
-        coreFolder.add(buddha, 'pause');
-        coreFolder.add(buddha, 'resume');
+
+        // Create a 'paused' control on the state that toggles the
+        // actual paused status on the Buddhabrot itself
+        var pausedCtrl = coreFolder.add(state, 'paused');
+        pausedCtrl.onChange(function(paused) {
+            if (paused) {
+                buddha.pause();
+            } else {
+                buddha.resume();
+            }
+        });
+
         coreFolder.add(buddha, 'resetImage');
 
         // Create fake listener on local state object to simulate
