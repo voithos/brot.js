@@ -32,8 +32,8 @@
     BrotJS.prototype.run = function() {
         this.addBuddhabrot();
 
-        var draw = this.createDrawHandler();
-        requestAnimationFrame(draw);
+        this.draw = this.createDrawHandler();
+        this.draw();
     };
 
     /**
@@ -118,16 +118,6 @@
         var ctx = canvas.getContext('2d');
         var imageData = ctx.createImageData(canvas.width, canvas.height);
 
-        var areComplete = function() {
-            var complete = true;
-            for (var i = 0; i < self.count; i++) {
-                if (!self.buddhas[i].complete) {
-                    complete = false;
-                }
-            }
-            return complete;
-        };
-
         var getImages = function() {
             var images = [],
                 i, image;
@@ -141,42 +131,37 @@
             return images;
         };
 
-        var combinePixels = function(pixels, idx, images, i) {
-            var red = 0, green = 0, blue = 0,
-                len = images.length,
-                j, image, state, alpha;
-
-            for (j = 0; j < len; j++) {
-                image = images[j];
-                state = self.states[j];
-                alpha = state.alpha;
-
-                red += state.red * image[i] * alpha;
-                green += state.green * image[i] * alpha;
-                blue += state.blue * image[i] * alpha;
-            }
-
-            pixels[idx] = red / len;
-            pixels[idx+1] = green / len;
-            pixels[idx+2] = blue / len;
-            pixels[idx+3] = 255;
-        };
-
         var draw = function() {
-            if (!areComplete()) {
-                requestAnimationFrame(draw);
-            } else {
-                console.log('all complete');
-            }
+            self.requestID = requestAnimationFrame(draw);
 
             var images = getImages(),
                 pixels = imageData.data,
-                len = imageData.width * imageData.height,
-                i;
+                states = self.states,
+                red, green, blue,
+                pixLen = imageData.width * imageData.height,
+                imgLen = images.length,
+                i, j, image, state, alpha;
 
-            for (i = 0; i < len; i++) {
+            // Set each pixel to the current color
+            for (i = 0; i < pixLen; i++) {
                 var idx = i * 4;
-                combinePixels(pixels, idx, images, i);
+                red = green = blue = 0;
+
+                // Evenly mix the pixel's color from the multiple Buddhabrot images
+                for (j = 0; j < imgLen; j++) {
+                    image = images[j];
+                    state = states[j];
+                    alpha = state.alpha;
+
+                    red += state.red * image[i] * alpha;
+                    green += state.green * image[i] * alpha;
+                    blue += state.blue * image[i] * alpha;
+                }
+
+                pixels[idx] = red / imgLen;
+                pixels[idx+1] = green / imgLen;
+                pixels[idx+2] = blue / imgLen;
+                pixels[idx+3] = 255;
             }
 
             ctx.putImageData(imageData, 0, 0);
