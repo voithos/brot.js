@@ -60,7 +60,7 @@
                     red: 0,
                     green: 255,
                     blue: 255,
-                    alpha: 255
+                    alpha: 1
                 };
                 this.states.push(state);
                 this.addToGUI(buddha, state);
@@ -93,14 +93,13 @@
                 colorFolder.add(state, "red", 0, 255);
                 colorFolder.add(state, "green", 0, 255);
                 colorFolder.add(state, "blue", 0, 255);
-                colorFolder.add(state, "alpha", 0, 255);
+                colorFolder.add(state, "alpha", 0, 1);
             };
             BrotJS.prototype.createDrawHandler = function() {
                 var self = this;
                 var canvas = self.canvas;
                 var ctx = canvas.getContext("2d");
                 var imageData = ctx.createImageData(canvas.width, canvas.height);
-                var components = [ "red", "green", "blue", "alpha" ];
                 var areComplete = function() {
                     var complete = true;
                     for (var i = 0; i < self.count; i++) {
@@ -125,7 +124,7 @@
                     for (j = 0; j < len; j++) {
                         image = images[j];
                         state = self.states[j];
-                        alpha = state.alpha / 255;
+                        alpha = state.alpha;
                         red += state.red * image[i] * alpha;
                         green += state.green * image[i] * alpha;
                         blue += state.blue * image[i] * alpha;
