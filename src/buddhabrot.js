@@ -34,7 +34,7 @@
         this.allocated = true;
 
         if (this.config.batched) {
-            setTimeout(this._scheduleBatchBound);
+            this.timeoutID = setTimeout(this._scheduleBatchBound);
         } else {
             this._computeTrajectories();
             this.callback(this.getImage());
@@ -46,6 +46,7 @@
      */
     Buddhabrot.prototype.pause = function() {
         this.paused = true;
+        clearTimeout(this.timeoutID);
     };
 
     /**
@@ -53,7 +54,7 @@
      */
     Buddhabrot.prototype.resume = function() {
         if (this.paused) {
-            setTimeout(this._scheduleBatchBound);
+            this.timeoutID = setTimeout(this._scheduleBatchBound);
             this.paused = false;
         }
     };
@@ -87,7 +88,7 @@
 
         if (!this.complete) {
             if (!this.paused) {
-                setTimeout(this._scheduleBatchBound);
+                this.timeoutID = setTimeout(this._scheduleBatchBound);
             }
         } else {
             this.callback(this.getImage());

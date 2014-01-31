@@ -56,6 +56,7 @@
                 this.buddhas.push(buddha);
                 var state = {
                     paused: false,
+                    autoNormalize: true,
                     maxEscapeIter: 8.6,
                     red: 0,
                     green: 255,
@@ -63,15 +64,15 @@
                     alpha: 1
                 };
                 this.states.push(state);
-                this.addToGUI(buddha, state);
+                this.addToGUI(buddha, state, this.count);
                 buddha.run();
             };
             BrotJS.prototype.setupGUI = function() {
                 this.gui = new dat.GUI();
                 this.gui.add(this, "addBuddhabrot");
             };
-            BrotJS.prototype.addToGUI = function(buddha, state) {
-                var coreFolder = this.gui.addFolder("Config " + this.count);
+            BrotJS.prototype.addToGUI = function(buddha, state, n) {
+                var coreFolder = this.gui.addFolder("Config " + n);
                 var pausedCtrl = coreFolder.add(state, "paused");
                 pausedCtrl.onChange(function(paused) {
                     if (paused) {
@@ -88,8 +89,22 @@
                 });
                 coreFolder.add(buddha.config, "batchSize", 1e3, 1e5);
                 coreFolder.add(buddha.config, "anti");
+                var autoNormalizeCtrl = coreFolder.add(state, "autoNormalize");
+                autoNormalizeCtrl.onChange(function(autoNormalize) {
+                    if (autoNormalize && coreFolder.normalizerCtrl) {
+                        coreFolder.normalizerCtrl.remove();
+                        buddha.data.userNormalizer = null;
+                        buddha.data.normalizeImage();
+                    } else {
+                        buddha.data.userNormalizer = buddha.data.maxHits || 1;
+                        coreFolder.normalizerCtrl = coreFolder.add(buddha.data, "userNormalizer").min(1);
+                        coreFolder.normalizerCtrl.onChange(function(normalizer) {
+                            buddha.data.normalizeImage();
+                        });
+                    }
+                });
                 coreFolder.open();
-                var colorFolder = this.gui.addFolder("Color " + this.count);
+                var colorFolder = this.gui.addFolder("Color " + n);
                 colorFolder.add(state, "red", 0, 255);
                 colorFolder.add(state, "green", 0, 255);
                 colorFolder.add(state, "blue", 0, 255);
@@ -167,7 +182,7 @@
                 this.data.allocate();
                 this.allocated = true;
                 if (this.config.batched) {
-                    setTimeout(this._scheduleBatchBound);
+                    this.timeoutID = setTimeout(this._scheduleBatchBound);
                 } else {
                     this._computeTrajectories();
                     this.callback(this.getImage());
@@ -175,10 +190,11 @@
             };
             Buddhabrot.prototype.pause = function() {
                 this.paused = true;
+                clearTimeout(this.timeoutID);
             };
             Buddhabrot.prototype.resume = function() {
                 if (this.paused) {
-                    setTimeout(this._scheduleBatchBound);
+                    this.timeoutID = setTimeout(this._scheduleBatchBound);
                     this.paused = false;
                 }
             };
@@ -198,7 +214,7 @@
                 this._computeTrajectories();
                 if (!this.complete) {
                     if (!this.paused) {
-                        setTimeout(this._scheduleBatchBound);
+                        this.timeoutID = setTimeout(this._scheduleBatchBound);
                     }
                 } else {
                     this.callback(this.getImage());
@@ -316,7 +332,8 @@
                         return new BuddhaData(config);
                     }
                     this.config = config;
-                    this.normalizer = 0;
+                    this.maxHits = 0;
+                    this.userNormalizer = null;
                 };
                 BuddhaData.prototype.allocate = function() {
                     if (!this.config.initialized) {
@@ -333,10 +350,10 @@
                         this.image[i] = 0;
                         this.normedImage[i] = 0;
                     }
-                    this.normalizer = 0;
+                    this.maxHits = 0;
                 };
                 BuddhaData.prototype.normalizeImage = function() {
-                    var normalizer = this.normalizer || 1, i, l;
+                    var normalizer = this.userNormalizer || this.maxHits || 1, i, l;
                     for (i = 0, l = this.config.pixels; i < l; i++) {
                         this.normedImage[i] = this.image[i] / normalizer;
                     }
@@ -359,8 +376,8 @@
                         col = (x - xstart) / dx | 0;
                         index = row * width + col;
                         hits = ++this.image[index];
-                        if (this.normalizer < hits) {
-                            this.normalizer = hits;
+                        if (this.maxHits < hits) {
+                            this.maxHits = hits;
                         }
                     }
                 };

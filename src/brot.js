@@ -52,6 +52,7 @@
 
         var state = {
             paused: false,
+            autoNormalize: true,
 
             // 8.4 is roughly 1/2 * log[base2](20), which is the default maxIter
             // See the setupGUI function for the logarithm emulation function
@@ -65,7 +66,7 @@
         };
         this.states.push(state);
 
-        this.addToGUI(buddha, state);
+        this.addToGUI(buddha, state, this.count);
         buddha.run();
     };
 
@@ -74,8 +75,8 @@
         this.gui.add(this, 'addBuddhabrot');
     };
 
-    BrotJS.prototype.addToGUI = function(buddha, state) {
-        var coreFolder = this.gui.addFolder('Config ' + this.count);
+    BrotJS.prototype.addToGUI = function(buddha, state, n) {
+        var coreFolder = this.gui.addFolder('Config ' + n);
 
         // Create a 'paused' control on the state that toggles the
         // actual paused status on the Buddhabrot itself
@@ -100,9 +101,25 @@
 
         coreFolder.add(buddha.config, 'batchSize', 1000, 100000);
         coreFolder.add(buddha.config, 'anti');
+
+        var autoNormalizeCtrl = coreFolder.add(state, 'autoNormalize');
+        autoNormalizeCtrl.onChange(function(autoNormalize) {
+            if (autoNormalize && coreFolder.normalizerCtrl) {
+                coreFolder.normalizerCtrl.remove();
+                buddha.data.userNormalizer = null;
+                buddha.data.normalizeImage();
+            } else {
+                buddha.data.userNormalizer = buddha.data.maxHits || 1;
+                coreFolder.normalizerCtrl = coreFolder.add(buddha.data, 'userNormalizer').min(1);
+                coreFolder.normalizerCtrl.onChange(function(normalizer) {
+                    buddha.data.normalizeImage();
+                });
+            }
+        });
+
         coreFolder.open();
 
-        var colorFolder = this.gui.addFolder('Color ' + this.count);
+        var colorFolder = this.gui.addFolder('Color ' + n);
         colorFolder.add(state, 'red', 0, 255);
         colorFolder.add(state, 'green', 0, 255);
         colorFolder.add(state, 'blue', 0, 255);
@@ -177,4 +194,3 @@
         brot.run();
     };
 })();
-                

@@ -8,8 +8,9 @@
 
         this.config = config;
 
-        // Keep track of max hit count
-        this.normalizer = 0;
+        // Keep track of max hit count and user-set normalizer
+        this.maxHits = 0;
+        this.userNormalizer = null;
     };
 
     /**
@@ -41,15 +42,16 @@
             this.normedImage[i] = 0;
         }
 
-        // Reset normalizer
-        this.normalizer = 0;
+        // Reset maxHits
+        this.maxHits = 0;
     };
 
     /**
-     * Normalize the image hit counts by dividing by the recorded normalizer
+     * Normalize the image hit counts, first by the user-set normalizer, then
+     * by the max hit count, if the user-set normalizer is unset
      */
     BuddhaData.prototype.normalizeImage = function() {
-        var normalizer = this.normalizer || 1,
+        var normalizer = this.userNormalizer || this.maxHits || 1,
             i, l;
 
         for (i = 0, l = this.config.pixels; i < l; i++) {
@@ -105,9 +107,9 @@
             // Increment image section
             hits = ++this.image[index];
 
-            // Reassign normalizer
-            if (this.normalizer < hits) {
-                this.normalizer = hits;
+            // Reassign maxHits
+            if (this.maxHits < hits) {
+                this.maxHits = hits;
             }
         }
     };
