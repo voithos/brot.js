@@ -33,6 +33,11 @@
                 canvas.height = window.innerHeight;
                 return canvas;
             };
+            var featureDetection = {};
+            featureDetection.downloadAttribute = function() {
+                var a = document.createElement("a");
+                return typeof a.download === "string";
+            }();
             var BrotJS = function(canvas) {
                 this.canvas = canvas;
                 this.count = 0;
@@ -70,6 +75,9 @@
             BrotJS.prototype.setupGUI = function() {
                 this.gui = new dat.GUI();
                 this.gui.add(this, "addBuddhabrot");
+                if (featureDetection.downloadAttribute) {
+                    this.gui.add(this, "saveImage");
+                }
             };
             BrotJS.prototype.addToGUI = function(buddha, state, n) {
                 var coreFolder = this.gui.addFolder("Config " + n);
@@ -109,6 +117,16 @@
                 colorFolder.add(state, "green", 0, 255);
                 colorFolder.add(state, "blue", 0, 255);
                 colorFolder.add(state, "alpha", 0, 1);
+            };
+            BrotJS.prototype.saveImage = function() {
+                var data = this.canvas.toDataURL("image/png");
+                var a = document.createElement("a");
+                a.style.display = "none";
+                document.body.appendChild(a);
+                a.download = "buddhabrot.png";
+                a.href = data;
+                a.click();
+                document.body.removeChild(a);
             };
             BrotJS.prototype.createDrawHandler = function() {
                 var self = this;

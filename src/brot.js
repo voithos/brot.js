@@ -12,6 +12,12 @@
         return canvas;
     };
 
+    var featureDetection = {};
+    featureDetection.downloadAttribute = (function() {
+        var a = document.createElement('a');
+        return typeof a.download === 'string';
+    })();
+
 
     /**
      * BrotJS - the primary controller object
@@ -73,6 +79,11 @@
     BrotJS.prototype.setupGUI = function() {
         this.gui = new dat.GUI();
         this.gui.add(this, 'addBuddhabrot');
+
+        // The 'download' attribute is needed in order to provide a filename
+        if (featureDetection.downloadAttribute) {
+            this.gui.add(this, 'saveImage');
+        }
     };
 
     BrotJS.prototype.addToGUI = function(buddha, state, n) {
@@ -124,6 +135,21 @@
         colorFolder.add(state, 'green', 0, 255);
         colorFolder.add(state, 'blue', 0, 255);
         colorFolder.add(state, 'alpha', 0, 1);
+    };
+
+    BrotJS.prototype.saveImage = function() {
+        var data = this.canvas.toDataURL('image/png');
+
+        var a = document.createElement('a');
+        a.style.display = 'none';
+
+        // To get the browser to download the image with a filename, we
+        // have to use the anchor tag's 'download' attribute
+        document.body.appendChild(a);
+        a.download = 'buddhabrot.png';
+        a.href = data;
+        a.click();
+        document.body.removeChild(a);
     };
 
     /**
