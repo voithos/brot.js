@@ -12,3 +12,38 @@ body {
     margin: 0;
     padding: 0;
 }
+
+#footer {
+    position: absolute;
+    bottom: 0;
+    width: 500px;
+    margin-left: -250px;
+    left: 50%;
+    text-align: center;
+    padding: 15px;
+}
+
+a {
+    color: #E61D5F;
+    font-weight: bold;
+}
+
+.glow {
+    color: #ffffff;
+    font-family: Courier, "Courier New", monospace;
+    font-size: 12px;
+    padding: 7px;
+    opacity: 0.4;
+    background-color: rgba(25, 25, 25, 0);
+    border-radius: 5px;
+
+    -webkit-transition: all 0.5s linear;
+    -moz-transition: all 0.5s linear;
+    -o-transition: all 0.5s linear;
+    transition: all 0.5s linear;
+}
+
+.glow:hover {
+    opacity: 1;
+    background-color: rgba(25, 25, 25, 1);
+}
