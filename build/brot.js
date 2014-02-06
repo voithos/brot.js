@@ -306,22 +306,23 @@
             BuddhaConfig.prototype.computeConfig = function() {
                 var INT_BYTES = 4, FLOAT_BYTES = 8;
                 this.pixels = this.width * this.height;
-                this.imageProcBytes = this.pixels * INT_BYTES + this.pixels * FLOAT_BYTES;
-                this.bufLength = (this.pixels * INT_BYTES + this.pixels * FLOAT_BYTES) * 2;
+                var spaceSize = this.pixels % 2 === 0 ? this.pixels : this.pixels + 1;
+                this.imageProcBytes = spaceSize * INT_BYTES + spaceSize * FLOAT_BYTES;
+                this.bufLength = this.imageProcBytes * 2;
                 var remainder = this.bufLength - this.imageProcBytes;
                 while (remainder < this.maxEscapeIter * FLOAT_BYTES * 2) {
                     this.bufLength = this.bufLength * 2;
                     remainder = this.bufLength - this.imageProcBytes;
                 }
                 this.imageStart = 0;
-                this.imageLength = this.pixels;
+                this.imageLength = spaceSize;
                 this.normedImageStart = this.imageLength * INT_BYTES;
-                this.normedImageLength = this.pixels;
-                this.cacheStart = this.imageLength * INT_BYTES + this.normedImageLength * FLOAT_BYTES;
+                this.normedImageLength = spaceSize;
+                this.cacheStart = this.normedImageStart + this.normedImageLength * FLOAT_BYTES;
                 this.cacheLength = (this.bufLength - this.cacheStart) / FLOAT_BYTES;
-                var MANDEL_REAL_LOWER = -2.5, MANDEL_REAL_UPPER = 1, MANDEL_IMAG_LOWER = -1, MANDEL_IMAG_UPPER = 1, MANDEL_REAL_LENGTH = MANDEL_REAL_UPPER - MANDEL_REAL_LOWER, MANDEL_IMAG_LENGTH = MANDEL_IMAG_UPPER - MANDEL_IMAG_LOWER, MANDEL_REAL_IMAG_RATIO = MANDEL_REAL_LENGTH / MANDEL_IMAG_LENGTH;
+                var MANDEL_REAL_LOWER = -2.5, MANDEL_REAL_UPPER = 1, MANDEL_IMAG_LOWER = -1, MANDEL_IMAG_UPPER = 1, MANDEL_REAL_LENGTH = MANDEL_REAL_UPPER - MANDEL_REAL_LOWER, MANDEL_IMAG_LENGTH = MANDEL_IMAG_UPPER - MANDEL_IMAG_LOWER, MANDEL_RATIO = MANDEL_REAL_LENGTH / MANDEL_IMAG_LENGTH;
                 var heightToWidthRatio = this.height / this.width;
-                if (heightToWidthRatio <= MANDEL_REAL_IMAG_RATIO) {
+                if (heightToWidthRatio <= MANDEL_RATIO) {
                     this.ystart = MANDEL_REAL_LOWER;
                     this.ylength = MANDEL_REAL_LENGTH;
                     this.xlength = this.ylength / heightToWidthRatio;
