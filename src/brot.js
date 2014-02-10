@@ -164,6 +164,15 @@
         var states = self.states;
         var pixLen = imageData.width * imageData.height;
 
+        // Initialize the alpha for all pixels so we don't have to do it
+        // in the draw function
+        (function() {
+            for (var i = 0; i < pixLen; i++) {
+                var idx = i * 4;
+                pixels[idx+3] = 255;
+            }
+        })();
+
         var getImages = function() {
             var images = [],
                 i, image;
@@ -181,29 +190,45 @@
             var images = getImages(),
                 imgLen = images.length,
                 red, green, blue,
-                i, j, image, state, alpha, alphaImgLen;
+                i, j, image, state, alpha, alphaImgLen = 1;
 
-            // Set each pixel to the current color
+            // Pre calculate cumulative alpha between all images, to use
+            // in normalization (if there are more than 1 image - otherwise,
+            // the single image's alpha value should simply mute its own colors)
+            if (imgLen > 1) {
+                alphaImgLen = 0;
+                for (j = 0; j < imgLen; j++) {
+                    alphaImgLen += states[j].alpha;
+                }
+            }
+
+            // Unroll first iteration, for performance reasons, as well as
+            // allowing for a nice place to reset the last frame's color
+            image = images[0];
+            state = states[0];
+            alpha = state.alpha;
+
             for (i = 0; i < pixLen; i++) {
                 var idx = i * 4;
-                red = green = blue = alphaImgLen = 0;
 
-                // Evenly mix the pixel's color from the multiple Buddhabrot images
-                for (j = 0; j < imgLen; j++) {
-                    image = images[j];
-                    state = states[j];
-                    alpha = state.alpha;
-                    alphaImgLen += state.alpha;
+                pixels[idx] = state.red * image[i] * alpha / alphaImgLen;
+                pixels[idx+1] = state.green * image[i] * alpha / alphaImgLen;
+                pixels[idx+2] = state.blue * image[i] * alpha / alphaImgLen;
+            }
 
-                    red += state.red * image[i] * alpha;
-                    green += state.green * image[i] * alpha;
-                    blue += state.blue * image[i] * alpha;
+            // Loop through the rest of the images and assign the proper color
+            for (j = 1; j < imgLen; j++) {
+                image = images[j];
+                state = states[j];
+                alpha = state.alpha;
+
+                for (i = 0; i < pixLen; i++) {
+                    var idx = i * 4;
+
+                    pixels[idx] += state.red * image[i] * alpha / alphaImgLen;
+                    pixels[idx+1] += state.green * image[i] * alpha / alphaImgLen;
+                    pixels[idx+2] += state.blue * image[i] * alpha / alphaImgLen;
                 }
-
-                pixels[idx] = red / alphaImgLen;
-                pixels[idx+1] = green / alphaImgLen;
-                pixels[idx+2] = blue / alphaImgLen;
-                pixels[idx+3] = 255;
             }
 
             ctx.putImageData(imageData, 0, 0);

@@ -136,6 +136,12 @@
                 var pixels = imageData.data;
                 var states = self.states;
                 var pixLen = imageData.width * imageData.height;
+                (function() {
+                    for (var i = 0; i < pixLen; i++) {
+                        var idx = i * 4;
+                        pixels[idx + 3] = 255;
+                    }
+                })();
                 var getImages = function() {
                     var images = [], i, image;
                     for (i = 0; i < self.count; i++) {
@@ -147,23 +153,32 @@
                     return images;
                 };
                 var draw = function() {
-                    var images = getImages(), imgLen = images.length, red, green, blue, i, j, image, state, alpha, alphaImgLen;
+                    var images = getImages(), imgLen = images.length, red, green, blue, i, j, image, state, alpha, alphaImgLen = 1;
+                    if (imgLen > 1) {
+                        alphaImgLen = 0;
+                        for (j = 0; j < imgLen; j++) {
+                            alphaImgLen += states[j].alpha;
+                        }
+                    }
+                    image = images[0];
+                    state = states[0];
+                    alpha = state.alpha;
                     for (i = 0; i < pixLen; i++) {
                         var idx = i * 4;
-                        red = green = blue = alphaImgLen = 0;
-                        for (j = 0; j < imgLen; j++) {
-                            image = images[j];
-                            state = states[j];
-                            alpha = state.alpha;
-                            alphaImgLen += state.alpha;
-                            red += state.red * image[i] * alpha;
-                            green += state.green * image[i] * alpha;
-                            blue += state.blue * image[i] * alpha;
+                        pixels[idx] = state.red * image[i] * alpha / alphaImgLen;
+                        pixels[idx + 1] = state.green * image[i] * alpha / alphaImgLen;
+                        pixels[idx + 2] = state.blue * image[i] * alpha / alphaImgLen;
+                    }
+                    for (j = 1; j < imgLen; j++) {
+                        image = images[j];
+                        state = states[j];
+                        alpha = state.alpha;
+                        for (i = 0; i < pixLen; i++) {
+                            var idx = i * 4;
+                            pixels[idx] += state.red * image[i] * alpha / alphaImgLen;
+                            pixels[idx + 1] += state.green * image[i] * alpha / alphaImgLen;
+                            pixels[idx + 2] += state.blue * image[i] * alpha / alphaImgLen;
                         }
-                        pixels[idx] = red / alphaImgLen;
-                        pixels[idx + 1] = green / alphaImgLen;
-                        pixels[idx + 2] = blue / alphaImgLen;
-                        pixels[idx + 3] = 255;
                     }
                     ctx.putImageData(imageData, 0, 0);
                     self.requestID = requestAnimationFrame(draw);
