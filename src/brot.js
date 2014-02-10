@@ -160,6 +160,9 @@
         var canvas = self.canvas;
         var ctx = canvas.getContext('2d');
         var imageData = ctx.createImageData(canvas.width, canvas.height);
+        var pixels = imageData.data;
+        var states = self.states;
+        var pixLen = imageData.width * imageData.height;
 
         var getImages = function() {
             var images = [],
@@ -175,39 +178,36 @@
         };
 
         var draw = function() {
-            self.requestID = requestAnimationFrame(draw);
-
             var images = getImages(),
-                pixels = imageData.data,
-                states = self.states,
-                red, green, blue,
-                pixLen = imageData.width * imageData.height,
                 imgLen = images.length,
-                i, j, image, state, alpha;
+                red, green, blue,
+                i, j, image, state, alpha, alphaImgLen;
 
             // Set each pixel to the current color
             for (i = 0; i < pixLen; i++) {
                 var idx = i * 4;
-                red = green = blue = 0;
+                red = green = blue = alphaImgLen = 0;
 
                 // Evenly mix the pixel's color from the multiple Buddhabrot images
                 for (j = 0; j < imgLen; j++) {
                     image = images[j];
                     state = states[j];
                     alpha = state.alpha;
+                    alphaImgLen += state.alpha;
 
                     red += state.red * image[i] * alpha;
                     green += state.green * image[i] * alpha;
                     blue += state.blue * image[i] * alpha;
                 }
 
-                pixels[idx] = red / imgLen;
-                pixels[idx+1] = green / imgLen;
-                pixels[idx+2] = blue / imgLen;
+                pixels[idx] = red / alphaImgLen;
+                pixels[idx+1] = green / alphaImgLen;
+                pixels[idx+2] = blue / alphaImgLen;
                 pixels[idx+3] = 255;
             }
 
             ctx.putImageData(imageData, 0, 0);
+            self.requestID = requestAnimationFrame(draw);
         };
 
         return draw;
