@@ -190,7 +190,7 @@
             var images = getImages(),
                 imgLen = images.length,
                 red, green, blue,
-                i, j, image, state, alpha, alphaImgLen = 1;
+                i, j, idx, image, state, alpha, alphaImgLen = 1;
 
             // Pre calculate cumulative alpha between all images, to use
             // in normalization (if there are more than 1 image - otherwise,
@@ -209,7 +209,7 @@
             alpha = state.alpha;
 
             for (i = 0; i < pixLen; i++) {
-                var idx = i * 4;
+                idx = i * 4;
 
                 pixels[idx] = state.red * image[i] * alpha / alphaImgLen;
                 pixels[idx+1] = state.green * image[i] * alpha / alphaImgLen;
@@ -223,7 +223,7 @@
                 alpha = state.alpha;
 
                 for (i = 0; i < pixLen; i++) {
-                    var idx = i * 4;
+                    idx = i * 4;
 
                     pixels[idx] += state.red * image[i] * alpha / alphaImgLen;
                     pixels[idx+1] += state.green * image[i] * alpha / alphaImgLen;

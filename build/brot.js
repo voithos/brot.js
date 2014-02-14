@@ -153,7 +153,7 @@
                     return images;
                 };
                 var draw = function() {
-                    var images = getImages(), imgLen = images.length, red, green, blue, i, j, image, state, alpha, alphaImgLen = 1;
+                    var images = getImages(), imgLen = images.length, red, green, blue, i, j, idx, image, state, alpha, alphaImgLen = 1;
                     if (imgLen > 1) {
                         alphaImgLen = 0;
                         for (j = 0; j < imgLen; j++) {
@@ -164,7 +164,7 @@
                     state = states[0];
                     alpha = state.alpha;
                     for (i = 0; i < pixLen; i++) {
-                        var idx = i * 4;
+                        idx = i * 4;
                         pixels[idx] = state.red * image[i] * alpha / alphaImgLen;
                         pixels[idx + 1] = state.green * image[i] * alpha / alphaImgLen;
                         pixels[idx + 2] = state.blue * image[i] * alpha / alphaImgLen;
@@ -174,7 +174,7 @@
                         state = states[j];
                         alpha = state.alpha;
                         for (i = 0; i < pixLen; i++) {
-                            var idx = i * 4;
+                            idx = i * 4;
                             pixels[idx] += state.red * image[i] * alpha / alphaImgLen;
                             pixels[idx + 1] += state.green * image[i] * alpha / alphaImgLen;
                             pixels[idx + 2] += state.blue * image[i] * alpha / alphaImgLen;
