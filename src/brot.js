@@ -239,6 +239,20 @@
             };
         })();
 
+        var batchAvailable = function() {
+            var res = false,
+                i, buddha;
+            for (i = 0; i < self.count; i++) {
+                buddha = self.buddhas[i];
+                if (buddha.batchAvailable) {
+                    res = true;
+                    buddha.batchAvailable = false;
+                }
+            }
+
+            return res;
+        };
+
         var getImages = function() {
             var images = [],
                 i, image;
@@ -258,6 +272,11 @@
         };
 
         var draw = function() {
+            if (!batchAvailable()) {
+                self.requestID = requestAnimationFrame(draw);
+                return;
+            }
+
             var images = getImages(),
                 imgLen = images.length,
                 red, green, blue,

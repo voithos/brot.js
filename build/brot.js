@@ -183,6 +183,17 @@
                         return filtered;
                     };
                 }();
+                var batchAvailable = function() {
+                    var res = false, i, buddha;
+                    for (i = 0; i < self.count; i++) {
+                        buddha = self.buddhas[i];
+                        if (buddha.batchAvailable) {
+                            res = true;
+                            buddha.batchAvailable = false;
+                        }
+                    }
+                    return res;
+                };
                 var getImages = function() {
                     var images = [], i, image;
                     for (i = 0; i < self.count; i++) {
@@ -198,6 +209,10 @@
                     return images;
                 };
                 var draw = function() {
+                    if (!batchAvailable()) {
+                        self.requestID = requestAnimationFrame(draw);
+                        return;
+                    }
                     var images = getImages(), imgLen = images.length, red, green, blue, i, j, idx, image, state, alpha, alphaImgLen = 1;
                     if (imgLen > 1) {
                         alphaImgLen = 0;
@@ -257,6 +272,7 @@
                 this.allocated = false;
                 this.paused = false;
                 this.complete = false;
+                this.batchAvailable = false;
                 this._scheduleBatchBound = this._scheduleBatch.bind(this);
             };
             Buddhabrot.prototype.run = function(callback) {
@@ -296,6 +312,7 @@
                 this._computeTrajectories();
                 if (!this.complete) {
                     if (!this.paused) {
+                        this.batchAvailable = true;
                         this.timeoutID = setTimeout(this._scheduleBatchBound);
                     }
                 } else {

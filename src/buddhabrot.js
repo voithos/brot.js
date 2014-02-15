@@ -20,6 +20,7 @@
         this.allocated = false;
         this.paused = false;
         this.complete = false;
+        this.batchAvailable = false;
 
         // Cached objects
         this._scheduleBatchBound = this._scheduleBatch.bind(this);
@@ -88,6 +89,7 @@
 
         if (!this.complete) {
             if (!this.paused) {
+                this.batchAvailable = true;
                 this.timeoutID = setTimeout(this._scheduleBatchBound);
             }
         } else {
