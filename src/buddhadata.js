@@ -26,9 +26,9 @@
 
         this.image = new Int32Array(
             this.buf, this.config.imageStart, this.config.imageLength);
-        this.normedImage = new Float64Array(
+        this.normedImage = new Float32Array(
             this.buf, this.config.normedImageStart, this.config.normedImageLength);
-        this.cache = new Float64Array(
+        this.cache = new Float32Array(
             this.buf, this.config.cacheStart, this.config.cacheLength);
     };
 

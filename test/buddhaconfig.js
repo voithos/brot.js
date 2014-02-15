@@ -31,7 +31,7 @@ describe('BuddhaConfig', function() {
 
     it('should compute correct buffer length', function() {
         var bc = createWithInit({ width: 100, height: 100, maxEscapeIter: 100 });
-        expect(bc.bufLength).to.equal(240000);
+        expect(bc.bufLength).to.equal(160000);
     });
 
     it('should compute lengths and offsets for buffer parts', function() {
@@ -40,8 +40,8 @@ describe('BuddhaConfig', function() {
         expect(bc.imageLength).to.equal(10000);
         expect(bc.normedImageStart).to.equal(40000);
         expect(bc.normedImageLength).to.equal(10000);
-        expect(bc.cacheStart).to.equal(120000);
-        expect(bc.cacheLength).to.equal(15000);
+        expect(bc.cacheStart).to.equal(80000);
+        expect(bc.cacheLength).to.equal(20000);
     });
 
     it('should compute offsets that are proper multiples of the array types', function() {
@@ -54,7 +54,7 @@ describe('BuddhaConfig', function() {
         utils.repeat(10, function() {
             var bc = createWithInit({ width: utils.randrange(100, 1000), height: utils.randrange(100, 1000) });
             expect(bc.normedImageStart).to.satisfy(divisibleBy(4)); // Int32
-            expect(bc.cacheStart).to.satisfy(divisibleBy(8)); // Float64
+            expect(bc.cacheStart).to.satisfy(divisibleBy(4)); // Float32
         });
     });
 

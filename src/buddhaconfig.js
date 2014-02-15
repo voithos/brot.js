@@ -31,7 +31,7 @@
      */
     BuddhaConfig.prototype.computeConfig = function() {
         var INT_BYTES = 4,
-            FLOAT_BYTES = 8;
+            FLOAT_BYTES = 4;
 
         // Set buffer length to the number of pixels required,
         // times number of bytes per pixel for ints, plus the same amount
@@ -40,7 +40,7 @@
         this.pixels = this.width * this.height;
 
         // Make sure that the space size is an even number, so that both
-        // Ints (4-bytes) and Floats (8-bytes) can coexist peacefully
+        // all data types can coexist peacefully
         var spaceSize = this.pixels % 2 === 0 ? this.pixels : this.pixels + 1;
         
         this.imageProcBytes = spaceSize * INT_BYTES +

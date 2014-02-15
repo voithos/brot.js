@@ -204,7 +204,7 @@
                 // Append to buffers if needed
                 if (filterImages.length < self.count) {
                     filterBufs.push(new ArrayBuffer(8 * pixLen));
-                    filterImages.push(new Float64Array(filterBufs[filterImages.length]));
+                    filterImages.push(new Float32Array(filterBufs[filterImages.length]));
                 }
 
                 var filtered = filterImages[i],

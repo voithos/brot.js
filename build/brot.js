@@ -164,7 +164,7 @@
                     return function(image, i) {
                         if (filterImages.length < self.count) {
                             filterBufs.push(new ArrayBuffer(8 * pixLen));
-                            filterImages.push(new Float64Array(filterBufs[filterImages.length]));
+                            filterImages.push(new Float32Array(filterBufs[filterImages.length]));
                         }
                         var filtered = filterImages[i], width = self.canvas.width, height = self.canvas.height, length = width * height, windowSize = self.windowSize, windowMargin = windowSize / 2 | 0, x, y, xl, yl, fx, fy, idx, colors;
                         for (y = windowMargin, yl = height - windowMargin; y < yl; y++) {
@@ -368,7 +368,7 @@
                 }
             };
             BuddhaConfig.prototype.computeConfig = function() {
-                var INT_BYTES = 4, FLOAT_BYTES = 8;
+                var INT_BYTES = 4, FLOAT_BYTES = 4;
                 this.pixels = this.width * this.height;
                 var spaceSize = this.pixels % 2 === 0 ? this.pixels : this.pixels + 1;
                 this.imageProcBytes = spaceSize * INT_BYTES + spaceSize * FLOAT_BYTES;
@@ -424,8 +424,8 @@
                     }
                     this.buf = new ArrayBuffer(this.config.bufLength);
                     this.image = new Int32Array(this.buf, this.config.imageStart, this.config.imageLength);
-                    this.normedImage = new Float64Array(this.buf, this.config.normedImageStart, this.config.normedImageLength);
-                    this.cache = new Float64Array(this.buf, this.config.cacheStart, this.config.cacheLength);
+                    this.normedImage = new Float32Array(this.buf, this.config.normedImageStart, this.config.normedImageLength);
+                    this.cache = new Float32Array(this.buf, this.config.cacheStart, this.config.cacheLength);
                 };
                 BuddhaData.prototype.resetImage = function() {
                     var i, l;

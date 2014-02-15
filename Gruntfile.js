@@ -25,7 +25,7 @@
       },
       watch: {
         dev: {
-          files: ['src/**/*.js', '!src/textbrot.js'],
+          files: ['src/**/*.js', '!src/textbrot.js', 'test/**/*.js'],
           tasks: ['usetheforce_on', 'test', 'build', 'usetheforce_off'],
           options: {
             livereload: true
