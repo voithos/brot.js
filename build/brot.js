@@ -43,6 +43,8 @@
                 this.count = 0;
                 this.buddhas = [];
                 this.states = [];
+                this.smooth = false;
+                this.windowSize = 3;
                 this.setupGUI();
             };
             BrotJS.prototype.run = function() {
@@ -73,11 +75,22 @@
                 buddha.run();
             };
             BrotJS.prototype.setupGUI = function() {
-                this.gui = new dat.GUI();
-                this.gui.add(this, "addBuddhabrot");
+                var self = this;
+                self.gui = new dat.GUI();
+                self.gui.add(self, "addBuddhabrot");
                 if (featureDetection.downloadAttribute) {
-                    this.gui.add(this, "saveImage");
+                    self.gui.add(self, "saveImage");
                 }
+                var smoothCtrl = self.gui.add(self, "smooth");
+                var windowSizeCtrl = self.gui.add(self, "windowSize").min(3).max(15).step(2);
+                windowSizeCtrl.domElement.style.display = "none";
+                smoothCtrl.onChange(function(smooth) {
+                    if (!smooth) {
+                        windowSizeCtrl.domElement.style.display = "none";
+                    } else {
+                        windowSizeCtrl.domElement.style.display = "";
+                    }
+                });
             };
             BrotJS.prototype.addToGUI = function(buddha, state, n) {
                 var coreFolder = this.gui.addFolder("Config " + n);
@@ -142,12 +155,44 @@
                         pixels[idx + 3] = 255;
                     }
                 })();
+                var smoother = function() {
+                    var filterBufs = [];
+                    var filterImages = [];
+                    var numericSorter = function(a, b) {
+                        return a - b;
+                    };
+                    return function(image, i) {
+                        if (filterImages.length < self.count) {
+                            filterBufs.push(new ArrayBuffer(8 * pixLen));
+                            filterImages.push(new Float64Array(filterBufs[filterImages.length]));
+                        }
+                        var filtered = filterImages[i], width = self.canvas.width, height = self.canvas.height, length = width * height, windowSize = self.windowSize, windowMargin = windowSize / 2 | 0, x, y, xl, yl, fx, fy, idx, colors;
+                        for (y = windowMargin, yl = height - windowMargin; y < yl; y++) {
+                            for (x = windowMargin, xl = width - windowMargin; x < xl; x++) {
+                                idx = y * width + x;
+                                colors = [];
+                                for (fy = 0; fy < windowSize; fy++) {
+                                    for (fx = 0; fx < windowSize; fx++) {
+                                        colors.push(image[idx + (fy - windowMargin) * width + (fx - windowMargin)]);
+                                    }
+                                }
+                                colors.sort(numericSorter);
+                                filtered[idx] = colors[colors.length / 2 | 0];
+                            }
+                        }
+                        return filtered;
+                    };
+                }();
                 var getImages = function() {
                     var images = [], i, image;
                     for (i = 0; i < self.count; i++) {
                         image = self.buddhas[i].getImage();
                         if (image) {
-                            images.push(image);
+                            if (self.smooth) {
+                                images.push(smoother(image, i));
+                            } else {
+                                images.push(image);
+                            }
                         }
                     }
                     return images;
