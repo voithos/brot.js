@@ -93,7 +93,11 @@
                 });
             };
             BrotJS.prototype.addToGUI = function(buddha, state, n) {
-                var coreFolder = this.gui.addFolder("Config " + n);
+                var self = this;
+                var coreFolder = self.gui.addFolder("Config " + n);
+                var setConfigChanged = function() {
+                    self.configChanged = true;
+                };
                 var pausedCtrl = coreFolder.add(state, "paused");
                 pausedCtrl.onChange(function(paused) {
                     if (paused) {
@@ -102,7 +106,7 @@
                         buddha.resume();
                     }
                 });
-                coreFolder.add(buddha, "resetImage");
+                coreFolder.add(buddha, "resetImage").onChange(setConfigChanged);
                 var escapeCtrl = coreFolder.add(state, "maxEscapeIter", 1, 30);
                 escapeCtrl.onChange(function(value) {
                     value = Math.pow(2, value / 2) + 2 | 0;
@@ -112,6 +116,7 @@
                 coreFolder.add(buddha.config, "anti");
                 var autoNormalizeCtrl = coreFolder.add(state, "autoNormalize");
                 autoNormalizeCtrl.onChange(function(autoNormalize) {
+                    setConfigChanged();
                     if (autoNormalize && coreFolder.normalizerCtrl) {
                         coreFolder.normalizerCtrl.remove();
                         buddha.data.userNormalizer = null;
@@ -120,16 +125,17 @@
                         buddha.data.userNormalizer = buddha.data.maxHits || 1;
                         coreFolder.normalizerCtrl = coreFolder.add(buddha.data, "userNormalizer").min(1);
                         coreFolder.normalizerCtrl.onChange(function(normalizer) {
+                            setConfigChanged();
                             buddha.data.normalizeImage();
                         });
                     }
                 });
                 coreFolder.open();
-                var colorFolder = this.gui.addFolder("Color " + n);
-                colorFolder.add(state, "red", 0, 255);
-                colorFolder.add(state, "green", 0, 255);
-                colorFolder.add(state, "blue", 0, 255);
-                colorFolder.add(state, "alpha", 0, 1);
+                var colorFolder = self.gui.addFolder("Color " + n);
+                colorFolder.add(state, "red", 0, 255).onChange(setConfigChanged);
+                colorFolder.add(state, "green", 0, 255).onChange(setConfigChanged);
+                colorFolder.add(state, "blue", 0, 255).onChange(setConfigChanged);
+                colorFolder.add(state, "alpha", 0, 1).onChange(setConfigChanged);
             };
             BrotJS.prototype.saveImage = function() {
                 var data = this.canvas.toDataURL("image/png");
@@ -209,10 +215,11 @@
                     return images;
                 };
                 var draw = function() {
-                    if (!batchAvailable()) {
+                    if (!batchAvailable() && !self.configChanged) {
                         self.requestID = requestAnimationFrame(draw);
                         return;
                     }
+                    self.configChanged = false;
                     var images = getImages(), imgLen = images.length, red, green, blue, i, j, idx, image, state, alpha, alphaImgLen = 1;
                     if (imgLen > 1) {
                         alphaImgLen = 0;
