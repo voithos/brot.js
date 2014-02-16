@@ -16,8 +16,7 @@
   },
   "keywords": [
     "mandelbrot",
-    "visualization",
-    "asm.js"
+    "visualization"
   ],
   "dependencies": {
     "commander": "~2.0.0"
