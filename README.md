@@ -7,7 +7,7 @@ The [Mandelbrot set](http://en.wikipedia.org/wiki/Mandelbrot_set) is a set of
 points in the complex plain that satisfy a certain property, namely that the
 repeated application of the formula
 
-![Mandelbrot set equation](http://www.sciweavers.org/tex2img.php?eq=z_%7Bn%2B1%7D%20%3D%20z%5E2_n%20%2B%20c&bc=White&fc=Black&im=png&fs=12&ff=fourier&edit=0)
+![Mandelbrot set equation](http://upload.wikimedia.org/math/1/6/8/1686ce42df2b6ee51a3ae880613ca4d9.png)
 
 remains bounded (i.e. does not escape towards positive or negative infinity),
 where _z<sub>0</sub>_ is 0 and _c_ is the point on the complex plain.
