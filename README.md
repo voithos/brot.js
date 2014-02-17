@@ -62,3 +62,9 @@ of the renderings. Here are a few things you should try:
   known as a Nebulabrot.
 
 ## Open Source
+
+Thanks goes to the following projects and platforms that were used:
+
+- dat.GUI
+- Grunt
+- HTML5 and the web platform
