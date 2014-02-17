@@ -1,6 +1,7 @@
 (function() {
     'use strict';
 
+    var dat = require('dat-gui');
     var _ = require('./polyfills');
     var Buddhabrot = require('./buddhabrot');
 
