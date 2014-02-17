@@ -1,16 +1,18 @@
 # brot.js
 ##### A Buddhabrot generator using HTML5 http://voithos.github.io/brot.js/
 
+![Buddhabrot](https://raw.github.com/voithos/brot.js/master/assets/brotjs.png)
+
 ## Intro
 
 The [Mandelbrot set](http://en.wikipedia.org/wiki/Mandelbrot_set) is a set of
-points in the complex plain that satisfy a certain property, namely that the
+points in the complex plane that satisfy a certain property, namely that the
 repeated application of the formula
 
 ![Mandelbrot set equation](http://upload.wikimedia.org/math/1/6/8/1686ce42df2b6ee51a3ae880613ca4d9.png)
 
 remains bounded (i.e. does not escape towards positive or negative infinity),
-where _z<sub>0</sub>_ is 0 and _c_ is the point on the complex plain.
+where _z<sub>0</sub>_ is 0 and _c_ is the point on the complex plane.
 
 The fractal image of the Mandelbrot set is easily recognizable to most, but
 perhaps less well-known is the so-called Buddhabrot.
@@ -39,7 +41,8 @@ of the renderings. Here are a few things you should try:
 - Modify `maxEscapeIter` to change the maximum escape threshold. This will
   yield a diverse number of resulting images. Note that the value on the
   control is on a logarithmic scale and thus does not reflect the actual
-  maximum iteration count.
+  maximum iteration count. The actual count is closer to `2^(n / 2)` where `n`
+  is the value of the control.
 
 - Lower the `batchSize` property to improve responsiveness, or increase it to
   calculate more points per timestep.
