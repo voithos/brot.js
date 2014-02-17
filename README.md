@@ -33,4 +33,32 @@ increase in their hit counts and become more prominent.
 
 ## Things to Try
 
+The `brot.js` interface contains controls that can be used to change properties
+of the renderings. Here are a few things you should try:
+
+- Modify `maxEscapeIter` to change the maximum escape threshold. This will
+  yield a diverse number of resulting images. Note that the value on the
+  control is on a logarithmic scale and thus does not reflect the actual
+  maximum iteration count.
+
+- Lower the `batchSize` property to improve responsiveness, or increase it to
+  calculate more points per timestep.
+
+- Toggle `anti` to change the criteria for inclusion in the final image.
+  Whereas the standard Buddhabrot plots the paths of points that *aren't* in
+  the Mandelbrot set, the so-called Anti-Buddhabrot plots points that *are* in
+  the set.
+
+- Toggle `autoNormalize` and manually adjust the normalizer to brighten or dim
+  the intensity of the image. When `autoNormalize` is turned on, the pixel with
+  the highest hit count is fully saturated, while all other pixels are
+  saturated in proportion to their hit counts.
+
+- Add multiple Buddhabrot layers and tweak their parameters to form a composite
+  image. Set their colors to an interesting mix (e.g. RGB, CMY) and the
+  resulting image will have different "frequencies" of the Buddhabrot mapped to
+  different "color channels," mimicking the techniques used by astronomers to
+  compose multiple images of different wavelengths. The resulting image is
+  known as a Nebulabrot.
+
 ## Open Source
