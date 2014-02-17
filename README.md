@@ -17,7 +17,7 @@ perhaps less well-known is the so-called Buddhabrot.
 
 The [Buddhabrot](http://en.wikipedia.org/wiki/Buddhabrot) is an alternative
 rendering technique which results in some very interesting and beautiful forms.
-Discovered in 1993 by [MelindaGreen](http://www.superliminal.com/fractals/bbrot/bbrot.htm),
+Discovered in 1993 by [Melinda Green](http://www.superliminal.com/fractals/bbrot/bbrot.htm),
 the Buddhabrot displays the paths of escaping points as they, eventually,
 proceed towards infinity. The frequency of visits per point is kept track of,
 and used to compute the final intensity for the pixel.
