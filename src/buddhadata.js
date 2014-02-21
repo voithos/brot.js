@@ -82,7 +82,7 @@
             dx = this.config.dx,
             dy = this.config.dy,
             width = this.config.width,
-            i, offset, x, y, row, col, col, index, hits;
+            i, offset, x, y, row, col, index, hits;
 
         for (i = 0; i < iterationCount; i++) {
             offset = 2 * i;
