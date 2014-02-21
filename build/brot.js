@@ -2909,7 +2909,7 @@
                 this.cache[offset + 1] = imag;
             };
             BuddhaData.prototype.saveTrajectory = function(iterationCount) {
-                var xstart = this.config.xstart, xend = this.config.xend, ystart = this.config.ystart, yend = this.config.yend, dx = this.config.dx, dy = this.config.dy, width = this.config.width, i, offset, x, y, row, col, index, hits;
+                var xstart = this.config.xstart, xend = this.config.xend, ystart = this.config.ystart, yend = this.config.yend, dx = this.config.dx, dy = this.config.dy, width = this.config.width, i, offset, x, y, row, col, col, index, hits;
                 for (i = 0; i < iterationCount; i++) {
                     offset = 2 * i;
                     y = this.cache[offset];
@@ -2921,6 +2921,9 @@
                     col = (x - xstart) / dx | 0;
                     index = row * width + col;
                     hits = ++this.image[index];
+                    col = (-x - xstart) / dx | 0;
+                    index = row * width + col;
+                    this.image[index]++;
                     if (this.maxHits < hits) {
                         this.maxHits = hits;
                     }

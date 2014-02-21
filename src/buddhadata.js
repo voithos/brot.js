@@ -82,7 +82,7 @@
             dx = this.config.dx,
             dy = this.config.dy,
             width = this.config.width,
-            i, offset, x, y, row, col, index, hits;
+            i, offset, x, y, row, col, col, index, hits;
 
         for (i = 0; i < iterationCount; i++) {
             offset = 2 * i;
@@ -106,6 +106,11 @@
 
             // Increment image section
             hits = ++this.image[index];
+
+            // Repeat for the mirror point
+            col = ((-x - xstart) / dx) | 0;
+            index = row * width + col;
+            this.image[index]++;
 
             // Reassign maxHits
             if (this.maxHits < hits) {
