@@ -52,6 +52,11 @@ of the renderings. Here are a few things you should try:
   the Mandelbrot set, the so-called Anti-Buddhabrot plots points that *are* in
   the set.
 
+- Toggle `sqrtNormalize` to use the square roots of hit counts when calculating
+  the normalizer. This balances the lower-intensity pixels somewhat, and allows
+  you to see some detail in saturated areas without losing all detail in less
+  intense areas.
+
 - Toggle `autoNormalize` and manually adjust the normalizer to brighten or dim
   the intensity of the image. When `autoNormalize` is turned on, the pixel with
   the highest hit count is fully saturated, while all other pixels are

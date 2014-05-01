@@ -2543,6 +2543,7 @@
                 this.buddhas.push(buddha);
                 var state = {
                     paused: false,
+                    sqrtNormalize: false,
                     autoNormalize: true,
                     maxEscapeIter: 8.6,
                     red: 0,
@@ -2584,6 +2585,11 @@
                 });
                 coreFolder.add(buddha.config, "batchSize", 1e3, 1e5);
                 coreFolder.add(buddha.config, "anti");
+                var sqrtNormalizeCtrl = coreFolder.add(state, "sqrtNormalize");
+                sqrtNormalizeCtrl.onChange(function(sqrtNormalize) {
+                    setConfigChanged();
+                    buddha.data.sqrtNormalize = sqrtNormalize;
+                });
                 var autoNormalizeCtrl = coreFolder.add(state, "autoNormalize");
                 autoNormalizeCtrl.onChange(function(autoNormalize) {
                     setConfigChanged();
@@ -2878,6 +2884,7 @@
                 }
                 this.config = config;
                 this.maxHits = 0;
+                this.sqrtNormalize = false;
                 this.userNormalizer = null;
             };
             BuddhaData.prototype.allocate = function() {
@@ -2899,8 +2906,15 @@
             };
             BuddhaData.prototype.normalizeImage = function() {
                 var normalizer = this.userNormalizer || this.maxHits || 1, i, l;
-                for (i = 0, l = this.config.pixels; i < l; i++) {
-                    this.normedImage[i] = this.image[i] / normalizer;
+                if (this.sqrtNormalize) {
+                    normalizer = Math.sqrt(normalizer);
+                    for (i = 0, l = this.config.pixels; i < l; i++) {
+                        this.normedImage[i] = Math.sqrt(this.image[i]) / normalizer;
+                    }
+                } else {
+                    for (i = 0, l = this.config.pixels; i < l; i++) {
+                        this.normedImage[i] = this.image[i] / normalizer;
+                    }
                 }
             };
             BuddhaData.prototype.cacheTrajectory = function(real, imag, i) {
@@ -2909,7 +2923,7 @@
                 this.cache[offset + 1] = imag;
             };
             BuddhaData.prototype.saveTrajectory = function(iterationCount) {
-                var xstart = this.config.xstart, xend = this.config.xend, ystart = this.config.ystart, yend = this.config.yend, dx = this.config.dx, dy = this.config.dy, width = this.config.width, i, offset, x, y, row, col, col, index, hits;
+                var xstart = this.config.xstart, xend = this.config.xend, ystart = this.config.ystart, yend = this.config.yend, dx = this.config.dx, dy = this.config.dy, width = this.config.width, i, offset, x, y, row, col, index, hits;
                 for (i = 0; i < iterationCount; i++) {
                     offset = 2 * i;
                     y = this.cache[offset];

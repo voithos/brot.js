@@ -10,6 +10,7 @@
 
         // Keep track of max hit count and user-set normalizer
         this.maxHits = 0;
+        this.sqrtNormalize = false;
         this.userNormalizer = null;
     };
 
@@ -54,8 +55,16 @@
         var normalizer = this.userNormalizer || this.maxHits || 1,
             i, l;
 
-        for (i = 0, l = this.config.pixels; i < l; i++) {
-            this.normedImage[i] = this.image[i] / normalizer;
+        if (this.sqrtNormalize) {
+            normalizer = Math.sqrt(normalizer);
+
+            for (i = 0, l = this.config.pixels; i < l; i++) {
+                this.normedImage[i] = Math.sqrt(this.image[i]) / normalizer;
+            }
+        } else {
+            for (i = 0, l = this.config.pixels; i < l; i++) {
+                this.normedImage[i] = this.image[i] / normalizer;
+            }
         }
     };
 

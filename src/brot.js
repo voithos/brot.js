@@ -61,6 +61,7 @@
 
         var state = {
             paused: false,
+            sqrtNormalize: false,
             autoNormalize: true,
 
             // 8.4 is roughly 1/2 * log[base2](20), which is the default maxIter
@@ -121,6 +122,12 @@
 
         coreFolder.add(buddha.config, 'batchSize', 1000, 100000);
         coreFolder.add(buddha.config, 'anti');
+
+        var sqrtNormalizeCtrl = coreFolder.add(state, 'sqrtNormalize');
+        sqrtNormalizeCtrl.onChange(function(sqrtNormalize) {
+            setConfigChanged();
+            buddha.data.sqrtNormalize = sqrtNormalize;
+        });
 
         var autoNormalizeCtrl = coreFolder.add(state, 'autoNormalize');
         autoNormalizeCtrl.onChange(function(autoNormalize) {
