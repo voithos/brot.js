@@ -41,6 +41,7 @@ a {
     -moz-transition: all 0.5s linear;
     -o-transition: all 0.5s linear;
     transition: all 0.5s linear;
+    transition-property: opacity, background-color;
 }
 
 .glow:hover {
